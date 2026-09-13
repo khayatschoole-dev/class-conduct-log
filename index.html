@@ -679,9 +679,11 @@ function updateDots(){
 function updateSaveBtn(){
   const isEscape = state.violation && state.violation.text === ESCAPE_VIOLATION_TEXT;
   const escapeOk = !isEscape || state.escapeRecipients.length === ESCAPE_REQUIRED_COUNT;
-  const ok = state.grade && state.klass && state.student && state.violation && state.classType && escapeOk;
+  const ok = state.grade && state.klass && state.student && state.violation && state.classType && escapeOk && !state.actionRepeated;
   $("btnSave").disabled = !ok;
-  if(isEscape && state.escapeRecipients.length !== ESCAPE_REQUIRED_COUNT){
+  if(state.actionRepeated){
+    $("saveHint").textContent = "🚫 لا يمكن الحفظ — هذا الإجراء متخذ مسبقًا، اختر إجراءً مختلفًا";
+  }else if(isEscape && state.escapeRecipients.length !== ESCAPE_REQUIRED_COUNT){
     $("saveHint").textContent = "اختر " + ESCAPE_REQUIRED_COUNT + " مستلمين بالضبط لتنبيه الهروب قبل الحفظ";
   }else{
     $("saveHint").textContent = ok ? "جاهز للحفظ ✓" : "أكمل الاختيارات الخمسة أعلاه للحفظ";
@@ -689,7 +691,7 @@ function updateSaveBtn(){
 }
 
 /* ===================== الحالة ===================== */
-const state = { grade:"", klass:"", student:null, violation:null, classType:"", escapeRecipients:[] };
+const state = { grade:"", klass:"", student:null, violation:null, classType:"", escapeRecipients:[], actionRepeated:false };
 
 /* ===================== منتقي مستلمي تنبيه الهروب ===================== */
 function renderEscapeRecipients(){
@@ -905,6 +907,8 @@ function hideActionRepeatWarning(){
   const box = $("actionRepeatWarning");
   box.style.display = "none";
   box.textContent = "";
+  state.actionRepeated = false;
+  updateSaveBtn();
 }
 
 let _actionCheckToken = 0;
@@ -933,7 +937,9 @@ async function checkRepeatedAction(){
       const r = rows[0];
       const box = $("actionRepeatWarning");
       box.style.display = "block";
-      box.textContent = "⚠️ تم اتخاذ هذا الإجراء بالفعل مع هذا الطالب لنفس المخالفة سابقًا (" + (r.vday||"") + " " + (r.vdate||"") + (r.teacher ? " — بواسطة: " + r.teacher : "") + ")";
+      box.textContent = "🚫 لا يمكن اتخاذ نفس الإجراء مرتين — تم اتخاذه مسبقًا مع هذا الطالب لنفس المخالفة (" + (r.vday||"") + " " + (r.vdate||"") + (r.teacher ? " — بواسطة: " + r.teacher : "") + "). اختر إجراءً مختلفًا للمتابعة.";
+      state.actionRepeated = true;
+      updateSaveBtn();
     }else{
       hideActionRepeatWarning();
     }
@@ -971,6 +977,7 @@ async function saveViolation(){
   if(!state.grade || !state.klass || !state.student || !state.violation || !state.classType) return;
   const isEscape = state.violation.text === ESCAPE_VIOLATION_TEXT;
   if(isEscape && state.escapeRecipients.length !== ESCAPE_REQUIRED_COUNT) return;
+  if(state.actionRepeated) return;
   const btn = $("btnSave");
   btn.disabled = true;
   btn.textContent = "جارٍ الحفظ...";
