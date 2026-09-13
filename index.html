@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f3d3e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="رصد المخالفات">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>رصد سريع — المخالفات السلوكية</title>
+<style>
+  :root{
+    --ink:#0f2d2e;
+    --bg:#f3f6f5;
+    --card:#ffffff;
+    --teal:#0f6b62;
+    --teal-dark:#0a4a44;
+    --amber:#c8862a;
+    --red:#b3413a;
+    --line:#e1e8e6;
+    --muted:#6b7c7a;
+    --r1:1,color-mix(in srgb, var(--teal) 12%, white);
+    --shadow:0 1px 2px rgba(15,45,46,.06), 0 8px 24px -12px rgba(15,45,46,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 90% -10%, #e8f2ee 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    min-height:100vh;
+    padding-bottom:48px;
+    -webkit-font-smoothing:antialiased;
+  }
+  @font-face{
+    font-family:"Tajawal";
+    src:local("Tajawal");
+  }
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(135deg,var(--teal-dark),var(--teal) 70%);
+    color:#fff;
+    padding:16px 18px 20px;
+    border-bottom:3px solid rgba(255,255,255,.15);
+    box-shadow:var(--shadow);
+  }
+  header.top .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  header.top h1{font-size:17px; margin:0; font-weight:800; letter-spacing:.2px;}
+  header.top .school{font-size:12px; opacity:.85; margin-top:2px;}
+  .datebadge{
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:11.5px;
+    text-align:center;
+    line-height:1.5;
+    white-space:nowrap;
+  }
+  main{max-width:520px; margin:0 auto; padding:16px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:var(--shadow);
+    margin-bottom:14px;
+  }
+  .steps{display:flex; gap:6px; margin-bottom:16px;}
+  .steps .dot{flex:1; height:4px; border-radius:99px; background:var(--line); transition:.25s;}
+  .steps .dot.on{background:var(--teal);}
+  label.field-label{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px; font-weight:700; color:var(--teal-dark);
+    margin:0 0 6px 2px;
+  }
+  label.field-label .num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%;
+    background:var(--teal); color:#fff; font-size:10.5px; font-weight:800;
+  }
+  .field{margin-bottom:14px;}
+  select, input[type=text], input[type=date], input[type=password], textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:12px 12px;
+    border-radius:11px;
+    border:1.6px solid var(--line);
+    background:#fbfdfc;
+    color:var(--ink);
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  select:disabled, input:disabled{
+    opacity:.5; background:#f1f4f3;
+  }
+  select:focus, input:focus, textarea:focus{
+    outline:none; border-color:var(--teal);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--teal) 16%, transparent);
+  }
+  .selwrap{position:relative;}
+  .selwrap::after{
+    content:"›";
+    position:absolute; left:14px; top:50%; transform:translateY(-50%) rotate(90deg);
+    color:var(--muted); font-size:18px; pointer-events:none;
+  }
+  textarea{resize:vertical; min-height:56px;}
+  .degree-pill{
+    display:inline-block; font-size:10.5px; font-weight:800;
+    padding:2px 8px; border-radius:99px; margin-inline-start:6px;
+  }
+  .d1{background:#e7f0ee;color:#2b6e63;}
+  .d2{background:#eef3d8;color:#6b7a1f;}
+  .d3{background:#fbe9d2;color:#a3611b;}
+  .d4{background:#f8dede;color:#a13a34;}
+  .d5{background:#efe0f3;color:#7a3487;}
+  .studentcard{
+    display:none;
+    align-items:center; gap:10px;
+    background:#f2f8f6; border:1px solid var(--r1);
+    border-radius:12px; padding:10px 12px; margin-top:8px;
+  }
+  .studentcard.show{display:flex;}
+  .avatar{
+    width:34px; height:34px; border-radius:50%; background:var(--teal);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:14px; flex:none;
+  }
+  .studentcard .meta{font-size:11.5px; color:var(--muted);}
+  .studentcard .nm{font-weight:800; font-size:14px;}
+  details.more{
+    border:1px dashed var(--line); border-radius:12px; padding:10px 12px; margin-top:4px;
+  }
+  details.more summary{
+    cursor:pointer; font-size:13px; font-weight:700; color:var(--teal-dark);
+    list-style:none; display:flex; align-items:center; justify-content:space-between;
+  }
+  details.more summary::-webkit-details-marker{display:none;}
+  details.more[open] summary{margin-bottom:10px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .btn{
+    width:100%; padding:15px; border:none; border-radius:13px;
+    font-size:16px; font-weight:800; cursor:pointer;
+    background:var(--teal); color:#fff;
+    box-shadow:0 10px 22px -10px color-mix(in srgb, var(--teal) 70%, transparent);
+  }
+  .btn:disabled{opacity:.45; box-shadow:none;}
+  .btn.ghost{
+    background:transparent; color:var(--teal-dark); border:1.6px solid var(--line);
+    box-shadow:none; font-weight:700;
+  }
+  .hint{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6;}
+  .esc-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 12px; border-radius:999px; border:1.5px solid var(--line);
+    background:#fff; font-size:13px; cursor:pointer; user-select:none;
+    transition:.15s;
+  }
+  .esc-chip input{accent-color:var(--red);}
+  .esc-chip.checked{border-color:var(--red); background:color-mix(in srgb, var(--red) 10%, white); font-weight:700;}
+  .notif-btn{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px;
+    padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.35);
+    background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+  }
+  .toast{
+    position:fixed; right:16px; left:16px; bottom:18px; z-index:50;
+    background:var(--ink); color:#fff; padding:13px 16px; border-radius:13px;
+    font-size:14px; font-weight:700; box-shadow:0 12px 28px -10px rgba(0,0,0,.35);
+    display:flex; align-items:center; gap:10px;
+    transform:translateY(120%); transition:transform .28s ease;
+    max-width:520px; margin:0 auto;
+  }
+  .toast.show{transform:translateY(0);}
+  .toast.err{background:var(--red);}
+  .toast .ic{font-size:18px;}
+  .recent{margin-top:10px;}
+  .recent h3{font-size:12.5px; color:var(--muted); margin:0 0 8px; font-weight:700;}
+  .rec-item{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    padding:9px 10px; border-radius:10px; background:#f7faf9; margin-bottom:6px;
+    font-size:12.5px;
+  }
+  .rec-item .who{font-weight:800;}
+  .rec-item .what{color:var(--muted);}
+  footer{
+    text-align:center; color:var(--muted); font-size:11px; padding:18px 10px 6px;
+  }
+  .empty-note{
+    background:#fff7ea; border:1px solid #f1dcb0; color:#7a5410;
+    border-radius:12px; padding:10px 12px; font-size:12.5px; margin-bottom:12px;
+  }
+  input::placeholder, textarea::placeholder{color:#9fb0ae;}
+
+  /* ===== حاجز كلمة المرور ===== */
+  #gate{
+    position:fixed; inset:0; z-index:100;
+    background:linear-gradient(160deg,var(--teal-dark),var(--teal));
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  #gate .box{
+    background:#fff; border-radius:18px; padding:26px 22px;
+    width:100%; max-width:340px; text-align:center;
+    box-shadow:0 20px 50px -18px rgba(0,0,0,.45);
+  }
+  #gate .lock{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 12px;
+    background:#eaf3f1; display:flex; align-items:center; justify-content:center;
+    font-size:24px;
+  }
+  #gate h2{margin:0 0 4px; font-size:16.5px; color:var(--ink);}
+  #gate p{margin:0 0 18px; font-size:12.5px; color:var(--muted);}
+  #gate input{
+    text-align:center; font-size:20px; letter-spacing:6px; font-weight:800;
+    margin-bottom:12px; width:100%;
+  }
+  #gate .err{color:var(--red); font-size:12.5px; min-height:16px; margin-bottom:8px; font-weight:700;}
+  body.locked{overflow:hidden;}
+  body.locked > header, body.locked > main, body.locked > footer{
+    filter:blur(6px); pointer-events:none; user-select:none;
+  }
+
+  .idrow{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,.18);
+    font-size:12.5px; color:#eaf3f1;
+  }
+  .idrow b{color:#fff;}
+  .idrow button{
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3);
+    color:#fff; font-size:11.5px; padding:5px 10px; border-radius:8px; cursor:pointer;
+  }
+
+  .tabs{display:flex; gap:8px; margin-bottom:14px;}
+  .tabbtn{
+    flex:1; padding:11px; border-radius:11px; border:1.6px solid var(--line);
+    background:#fff; color:var(--muted); font-weight:800; font-size:13.5px; cursor:pointer;
+  }
+  .tabbtn.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+
+  .mine-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .mine-head h3{margin:0; font-size:15px;}
+  .ghostlink{
+    background:none; border:none; color:var(--teal-dark); font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .mine-list{margin-top:12px;}
+  .mine-item{
+    border:1px solid var(--line); border-radius:12px; padding:11px 12px; margin-bottom:9px;
+    background:#fbfdfc;
+  }
+  .mine-item .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .mine-item .st-name{font-weight:800; font-size:14px;}
+  .mine-item .st-class{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .mine-item .vtext{font-size:13px; margin-top:8px; color:var(--ink);}
+  .mine-item .vmeta{font-size:11px; color:var(--muted); margin-top:6px; display:flex; gap:10px; flex-wrap:wrap;}
+
+  /* ===== تنبيه تكرار المخالفات ===== */
+  .warn-overlay{
+    position:fixed; inset:0; z-index:200; background:rgba(15,45,46,.55);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-box{
+    background:#fff; border-radius:18px; padding:24px 20px; max-width:360px; width:100%;
+    text-align:center; box-shadow:0 20px 50px -18px rgba(0,0,0,.5);
+    border-top:5px solid var(--red);
+  }
+  .warn-box .warn-ic{font-size:34px; margin-bottom:6px;}
+  .warn-box h2{margin:0 0 10px; font-size:16.5px; color:var(--red);}
+  .warn-box p{font-size:13px; color:var(--ink); line-height:1.9; margin:0 0 16px;}
+  .warn-box .btn{margin-bottom:8px;}
+
+  /* ===== نموذج التحويل القابل للطباعة (التصميم الرسمي المعتمد) ===== */
+  .report-overlay{
+    position:fixed; inset:0; z-index:210; background:#dfe4e0; overflow-y:auto;
+  }
+  .report-toolbar{
+    position:sticky; top:0; z-index:5; display:flex; gap:10px; justify-content:center;
+    background:var(--teal-dark); padding:12px 14px; box-shadow:0 3px 12px rgba(0,0,0,.2);
+  }
+  .report-toolbar .btn{width:auto; padding:11px 20px; font-size:13.5px; background:#a9822f;}
+  .report-toolbar .btn.ghost{background:transparent; color:#fff; border:1.4px solid rgba(255,255,255,.4);}
+
+  .report-sheet{
+    --gold:#a9822f; --gold-light:#e7d9b3; --r-line:#e2e3d9; --r-muted:#6c7a76;
+    --d1:#2b6e63; --d1bg:#e7f0ee; --d2:#6b7a1f; --d2bg:#eef3d8; --d3:#a3611b; --d3bg:#fbe9d2;
+    --d4:#a13a34; --d4bg:#f8dede; --d5:#7a3487; --d5bg:#efe0f3;
+    max-width:640px; margin:20px auto; background:#fbfaf5; color:#1c2b28;
+    position:relative; overflow:hidden; border-radius:6px;
+    box-shadow:0 2px 4px rgba(10,40,36,.08), 0 24px 48px -20px rgba(10,40,36,.35);
+  }
+  .report-sheet::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background-image:radial-gradient(circle, rgba(10,74,68,.06) 1px, transparent 1px);
+    background-size:16px 16px;
+  }
+  .r-inner{position:relative; padding:0 0 30px;}
+  .r-letterhead{
+    background:linear-gradient(135deg,var(--teal-dark) 0%, var(--teal) 75%);
+    padding:22px 24px 18px; position:relative; overflow:hidden;
+  }
+  .r-letterhead::after{
+    content:""; position:absolute; left:-40px; top:-40px; width:160px; height:160px;
+    background-image:radial-gradient(circle, rgba(255,255,255,.14) 2px, transparent 2px);
+    background-size:14px 14px; border-radius:50%;
+  }
+  .r-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; position:relative; z-index:1;}
+  .r-seal{
+    width:48px; height:48px; border-radius:50%; flex:none;
+    background:radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 70%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 0 0 3px rgba(255,255,255,.35);
+  }
+  .r-titles{text-align:center; flex:1;}
+  .r-titles .r-doctitle{font-family:"Amiri",serif; font-weight:700; font-size:19px; color:#fff; line-height:1.4;}
+  .r-titles .r-docsub{font-size:11px; color:rgba(255,255,255,.78); margin-top:4px; font-weight:500;}
+  .r-refbox{
+    flex:none; text-align:center; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.35);
+    border-radius:8px; padding:6px 10px; min-width:88px;
+  }
+  .r-refbox .rb-label{font-size:8.5px; color:rgba(255,255,255,.75); font-weight:700;}
+  .r-refbox .rb-value{font-size:11px; color:#fff; font-weight:800; margin-top:2px; direction:ltr;}
+  .r-lhbottom{
+    margin-top:14px; display:flex; justify-content:space-between; align-items:center;
+    border-top:1px solid rgba(255,255,255,.22); padding-top:9px; position:relative; z-index:1;
+  }
+  .r-statuschip{
+    background:var(--red); color:#fff; font-size:10.5px; font-weight:800;
+    padding:5px 13px; border-radius:99px;
+  }
+  .r-lhdate{font-size:10.5px; color:rgba(255,255,255,.8); font-weight:600;}
+
+  .r-content{padding:22px 24px 0;}
+  .r-sectlabel{
+    font-size:10.5px; font-weight:800; color:var(--gold); letter-spacing:.5px;
+    display:flex; align-items:center; gap:8px; margin-bottom:11px;
+  }
+  .r-sectlabel::after{content:""; flex:1; height:1px; background:var(--r-line);}
+
+  .r-infocard{
+    display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--r-line); border-radius:10px;
+    overflow:hidden; margin-bottom:22px; background:#fff;
+  }
+  .r-cell{padding:12px 15px; border-bottom:1px solid var(--r-line);}
+  .r-cell:nth-child(odd){border-left:1px solid var(--r-line);}
+  .r-cell:nth-last-child(-n+2){border-bottom:none;}
+  .r-cell .ric-label{font-size:9.5px; color:var(--r-muted); font-weight:700; margin-bottom:3px;}
+  .r-cell .ric-value{font-size:13.5px; font-weight:800; color:#1c2b28;}
+
+  .r-leadnote{font-size:12px; color:#3a4746; margin-bottom:12px; line-height:1.8;}
+
+  table.r-vtable{width:100%; border-collapse:separate; border-spacing:0 7px; margin-bottom:6px;}
+  table.r-vtable thead th{font-size:9.5px; color:var(--r-muted); font-weight:800; text-align:center; padding-bottom:2px;}
+  table.r-vtable tbody tr{background:#fff;}
+  table.r-vtable tbody td{
+    padding:9px 6px; text-align:center; font-size:11px; border-top:1px solid var(--r-line); border-bottom:1px solid var(--r-line);
+  }
+  table.r-vtable tbody td:first-child{border-right:1px solid var(--r-line); border-radius:8px 0 0 8px; font-weight:800; color:var(--gold);}
+  table.r-vtable tbody td:last-child{border-left:1px solid var(--r-line); border-radius:0 8px 8px 0;}
+  table.r-vtable tbody td.r-vdate{color:var(--r-muted); font-size:10px; white-space:nowrap;}
+  table.r-vtable tbody td.r-vtext{text-align:right; font-weight:700;}
+  .r-degpill{display:inline-block; padding:3px 9px; border-radius:99px; font-size:10px; font-weight:800;}
+
+  .r-ack{
+    position:relative; margin:22px 0 20px; padding:16px 20px 16px 18px;
+    background:#fbf1e8; border:1px solid var(--gold-light); border-radius:10px;
+    border-inline-start:5px solid var(--red);
+  }
+  .r-ack .r-acktag{
+    position:absolute; top:-10px; left:14px; background:var(--red); color:#fff;
+    font-size:9.5px; font-weight:800; padding:4px 11px; border-radius:99px;
+    box-shadow:0 3px 8px rgba(161,58,52,.35);
+  }
+  .r-ack p{margin:0; font-size:13px; font-weight:700; line-height:2; color:#5a3a1f;}
+
+  .r-signgrid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
+  .r-signcard{border:1px solid var(--r-line); border-radius:10px; padding:14px 16px; background:#fff;}
+  .r-signcard .rsc-title{font-size:11px; font-weight:800; color:var(--teal-dark); margin-bottom:12px;}
+  .r-signrow{display:flex; align-items:flex-end; gap:8px; margin-bottom:14px;}
+  .r-signrow:last-child{margin-bottom:0;}
+  .r-signrow .rsr-label{font-size:10px; color:var(--r-muted); font-weight:700; white-space:nowrap;}
+  .r-signrow .rsr-line{flex:1; border-bottom:1.3px dotted #a9b3ae; height:1px; margin-bottom:2px;}
+
+  .r-footer{
+    margin:26px 24px 0; padding-top:12px; border-top:1px solid var(--r-line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+  }
+  .r-footer .rf-text{font-size:9px; color:var(--r-muted);}
+  .r-footer .rf-logo{font-size:9.5px; font-weight:800; color:var(--teal);}
+
+  @media (max-width:480px){
+    .r-content{padding:18px 16px 0;}
+    .r-letterhead{padding:18px 16px 14px;}
+    .r-infocard{grid-template-columns:1fr;}
+    .r-cell:nth-child(odd){border-left:none;}
+    .r-cell:nth-last-child(-n+2){border-bottom:1px solid var(--r-line);}
+    .r-cell:last-child{border-bottom:none;}
+    .r-signgrid{grid-template-columns:1fr;}
+  }
+
+  @media print{
+    @page{ size: A4; margin: 8mm; }
+    body *{visibility:hidden;}
+    .report-sheet, .report-sheet *{visibility:visible;}
+    .report-sheet{
+      position:absolute; top:0; right:0; left:0; margin:0; box-shadow:none; max-width:100%;
+      font-size:92%;
+    }
+    .no-print{display:none !important;}
+    .r-letterhead{padding:14px 18px 12px;}
+    .r-content{padding:14px 18px 0;}
+    .r-infocard{margin-bottom:14px;}
+    .r-cell{padding:8px 12px;}
+    .r-sectlabel{margin-bottom:7px;}
+    .r-leadnote{margin-bottom:8px;}
+    table.r-vtable{border-spacing:0 4px;}
+    table.r-vtable tbody td{padding:6px 6px;}
+    .r-ack{margin:12px 0 12px; padding:10px 16px 10px 14px;}
+    .r-ack p{line-height:1.6;}
+    .r-signgrid{margin-top:2px; gap:10px;}
+    .r-signcard{padding:10px 14px;}
+    .r-signrow{margin-bottom:9px;}
+    .r-footer{margin:14px 24px 0; padding-top:8px;}
+    .r-letterhead, .r-infocard, .r-ack, .r-signgrid, .r-footer{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body class="locked">
+
+<div id="gate">
+  <div class="box" id="gateStep1">
+    <div class="lock">👤</div>
+    <h2>تسجيل الدخول</h2>
+    <p>اكتب اسمك الثنائي وكلمة مرورك الخاصة<br><span style="opacity:.75;">أول مرة؟ فقط اكتب اسمك وأي كلمة مرور تريدها وستُحفظ لك تلقائيًا</span></p>
+    <input type="text" id="gateName" placeholder="الاسم الثنائي (مثال: محمد أحمد)" autocomplete="off" style="margin-bottom:10px;">
+    <input type="password" id="gatePass" placeholder="كلمة المرور" autocomplete="off">
+    <div class="err" id="gateErr"></div>
+    <button class="btn" id="gateBtn">دخول</button>
+  </div>
+</div>
+
+<header class="top">
+  <div class="row">
+    <div>
+      <h1>رصد سريع — المخالفات السلوكية</h1>
+      <div class="school">الشيخ عبدالله خياط المتوسطة — مكة المكرمة</div>
+    </div>
+    <div class="datebadge" id="dateBadge">—</div>
+  </div>
+  <div class="idrow" id="idRow" style="display:none;">
+    <span>مسجّل باسم: <b id="idName">—</b></span>
+    <button id="btnSwitchUser" type="button">تبديل المستخدم</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="tabs">
+    <button class="tabbtn active" id="tabEntry" type="button">تسجيل مخالفة</button>
+    <button class="tabbtn" id="tabMine" type="button">سجل مخالفاتي</button>
+  </div>
+
+  <section id="viewEntry">
+
+  <div class="card">
+    <div class="steps">
+      <div class="dot" id="dotGrade"></div>
+      <div class="dot" id="dotClass"></div>
+      <div class="dot" id="dotStudent"></div>
+      <div class="dot" id="dotViolation"></div>
+      <div class="dot" id="dotClassType"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label"><span class="num">1</span> الصف الدراسي</label>
+      <div class="selwrap">
+        <select id="selGrade">
+          <option value="">اختر الصف...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label"><span class="num">2</span> الفصل</label>
+      <div class="selwrap">
+        <select id="selClass" disabled>
+          <option value="">اختر الصف الدراسي أولاً</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label"><span class="num">3</span> اسم الطالب</label>
+      <div class="selwrap">
+        <select id="selStudent" disabled>
+          <option value="">اختر الفصل أولاً</option>
+        </select>
+      </div>
+      <div class="studentcard" id="studentCard">
+        <div class="avatar" id="stuAvatar">؟</div>
+        <div>
+          <div class="nm" id="stuName">—</div>
+          <div class="meta" id="stuMeta">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label"><span class="num">4</span> المخالفة السلوكية</label>
+      <div class="selwrap">
+        <select id="selViolation">
+          <option value="">اختر المخالفة...</option>
+        </select>
+      </div>
+      <div class="hint" id="degreeHint"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label"><span class="num">5</span> نوع الحصة</label>
+      <div id="classTypeGroup" style="display:flex; gap:10px;">
+        <label class="esc-chip" style="flex:1; justify-content:center; padding:12px;">
+          <input type="radio" name="classType" value="رئيسية" id="ctMain"><span>📘 رئيسية</span>
+        </label>
+        <label class="esc-chip" style="flex:1; justify-content:center; padding:12px;">
+          <input type="radio" name="classType" value="انتظار" id="ctWait"><span>⏳ انتظار</span>
+        </label>
+      </div>
+    </div>
+
+    <details class="more" id="moreDetails">
+      <summary>تفاصيل إضافية (اختياري) <span id="moreArrow">▾</span></summary>
+      <div class="field grid2">
+        <div>
+          <label class="field-label" style="margin-bottom:4px;">الحصة</label>
+          <div class="selwrap">
+            <select id="selPeriod">
+              <option value="">—</option>
+              <option>الحصة الأولى</option>
+              <option>الحصة الثانية</option>
+              <option>الحصة الثالثة</option>
+              <option>الحصة الرابعة</option>
+              <option>الحصة الخامسة</option>
+              <option>الحصة السادسة</option>
+              <option>الحصة السابعة</option>
+              <option>الفسحة</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label" style="margin-bottom:4px;">الإجراء المتخذ</label>
+          <div class="selwrap">
+            <select id="selAction">
+              <option value="">—</option>
+              <option>تنبيه شفهي أول</option>
+              <option>تنبيه شفهي ثاني</option>
+              <option>تدوين المشكلة وتوقيع الطالب</option>
+              <option>حسم درجة من السلوك الإيجابي</option>
+              <option>إشعار ولي الأمر هاتفياً</option>
+              <option>دعوة ولي الأمر حضورياً</option>
+              <option>إحالة للموجه الطلابي</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" style="margin-bottom:4px;">ملاحظات</label>
+        <textarea id="inpNotes" placeholder="أي تفاصيل إضافية عن الموقف..."></textarea>
+      </div>
+    </details>
+
+  </div>
+
+  <button class="btn" id="btnSave" disabled>حفظ المخالفة</button>
+  <div class="hint" style="text-align:center; margin-top:10px;" id="saveHint">أكمل الاختيارات الأربعة أعلاه للحفظ</div>
+
+  <div class="recent" id="recentWrap" style="display:none;">
+    <h3>آخر ما تم تسجيله في هذه الجلسة</h3>
+    <div id="recentList"></div>
+  </div>
+
+  </section>
+
+  <section id="viewMine" style="display:none;">
+    <div class="card">
+      <div class="mine-head">
+        <h3>سجل مخالفاتي</h3>
+        <button id="btnRefreshMine" type="button" class="ghostlink">↻ تحديث</button>
+      </div>
+      <div class="hint">تُعرض هنا فقط المخالفات المسجّلة باسمك.</div>
+      <div id="mineList" class="mine-list"></div>
+      <div id="mineEmpty" class="empty-note" style="display:none;">لا توجد مخالفات مسجّلة باسمك بعد.</div>
+      <div id="mineLoading" class="hint" style="text-align:center; display:none;">جارٍ التحميل...</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"><span class="ic">✓</span><span id="toastMsg"></span></div>
+
+<footer>مركز رصد المخالفات — متصل بقاعدة نظام المخالفات الحالي</footer>
+
+<script>
+/* ===================== إعداد Supabase ===================== */
+const SUPABASE_URL = "https://hqppacntsggeyxfkobjn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcHBhY250c2dnZXl4ZmtvYmpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mjg1NjYsImV4cCI6MjA5MDUwNDU2Nn0.i2kNNTgI7JgJ7bN1Sudie543s_84YYDuPc9rqbSoXJY";
+
+/* ===================== بيانات الطلاب ===================== */
+/* كل عنصر: [الصف، الفصل، اسم الطالب، رقم الطالب] */
+const STUDENTS = [["الأول متوسط","1","الياس  ابن يوسف بن جمعان بن عبد المعطي العيشي السفياني","1170238578"],["الأول متوسط","1","براء غسان عبدالله السقطي",""],["الأول متوسط","1","جاد خالد شعبان الحبشي","1169041850"],["الأول متوسط","1","رازي فيصل عبدالله بازرعه","1170280422"],["الأول متوسط","1","رامي ياسر بن حميد السويهرى","1170168817"],["الأول متوسط","1","رواد رامى علي مبارك","1167378148"],["الأول متوسط","1","رواف سعود بريك الهذلي","1170083529"],["الأول متوسط","1","زامل عبدالاله علي محسن","1169590393"],["الأول متوسط","1","زياد سامى خليفه المولد","1168716908"],["الأول متوسط","1","سلطان تركي بن لطفي قطب","1167845922"],["الأول متوسط","1","طلال سالم بن مهدي الحجاجي","1166136513"],["الأول متوسط","1","عبادي عادل بن عدنان حلواني","1171074311"],["الأول متوسط","1","عبدالعزيز عاصم بن يوسف مقلان","1158365880"],["الأول متوسط","1","عبدالله حسن ابن يارمحمد بخش","1169817234"],["الأول متوسط","1","عبدالله رشيد بن فيصل الدوسري","1169865464"],["الأول متوسط","1","عمر مسلم بن جريد الصاعدي","1171092255"],["الأول متوسط","1","قصي عدنان قاسم ناجى","1170822769"],["الأول متوسط","1","قصي ماهر محمود قطب",""],["الأول متوسط","1","كنان فيصل سويلم السويلم","1172320655"],["الأول متوسط","1","مجد زاهر - عبدالباري","2396195345"],["الأول متوسط","1","محمد بكر محمد هارون","2407368865"],["الأول متوسط","1","محمد عمرو محمد غزاوي","1177592282"],["الأول متوسط","1","مرزوق ممدوح عبدالله الرميحى","1171656182"],["الأول متوسط","1","معاذ ممدوح معيض العرابي","1162936668"],["الأول متوسط","1","منصور خالد بن سنوسي زيني","1172353292"],["الأول متوسط","1","ناصر محمد - ياسين","2372389433"],["الأول متوسط","1","نايف كمال بن سعيد امام","1168999470"],["الأول متوسط","1","نواف نايف سالم الغامدي","1167821519"],["الأول متوسط","1","هاشم رايد بن هاشم فيزو","1169020979"],["الأول متوسط","1","يزن يوسف بن وصل الحازمي","1169140397"],["الأول متوسط","2","احمد يحيى - زيدان","2392710626"],["الأول متوسط","2","جواد محمد بن صالح الحارثي","1169100789"],["الأول متوسط","2","خالد هاني بن عايد اللهيبي","1176869723"],["الأول متوسط","2","دخيل عبدالله دخيل الجحدلي",""],["الأول متوسط","2","رايف يحي بن احمد الزهراني","1170982084"],["الأول متوسط","2","زايد فيصل صالح الغامدي","1168795670"],["الأول متوسط","2","سلطان ممدوح عبدالله الرميحى","1166954451"],["الأول متوسط","2","سلمان أحمد يحى مدخلي","1163189432"],["الأول متوسط","2","طه عبدالله طارق بغلف","1170518763"],["الأول متوسط","2","عبدالعزيز أحمد علي الحربي","1171778937"],["الأول متوسط","2","عبدالعزيز سعود عبدالعزيز المغربي","1171741406"],["الأول متوسط","2","عبدالعزيز عمر بن بركات بكاوي","1167417292"],["الأول متوسط","2","عبدالله ماجد بن عبدالله برناوى","1169076286"],["الأول متوسط","2","عدنان عبدالله بن أحمد الفقيه","1168276689"],["الأول متوسط","2","علي تاج الدين علي عبدالرشيد","1170887572"],["الأول متوسط","2","عمر ابراهيم محمد خوج","1169723309"],["الأول متوسط","2","فارس احمد بن عبدالله بادحدح","1165516731"],["الأول متوسط","2","فارس عبدالله حمود الغامدي","1168197737"],["الأول متوسط","2","محمد أيمن بن محمد الحربي","1166842342"],["الأول متوسط","2","محمد خالد بن عبدالله الغامدي","1170067258"],["الأول متوسط","2","محمد زينى محمد بوقس",""],["الأول متوسط","2","محمد مروان بن محمدامين ثابت","1166121325"],["الأول متوسط","2","مشاري محمد عبدالعزيز الاحمدي","1167184652"],["الأول متوسط","2","مشهور سعيد حمود العبدلي","1167840857"],["الأول متوسط","2","معن عبدالحميد وصل الحازمي","1170012361"],["الأول متوسط","2","مهند ابراهيم حامد الصبحى","1168272027"],["الأول متوسط","2","وسام مراد احمد الغامدي","1168840377"],["الأول متوسط","2","وسيم فهد محمد أبورزيزه","1171203555"],["الأول متوسط","2","يوسف - - الحمدو","2385409640"],["الأول متوسط","3","أحمد صالح احمد بازهير","1165278746"],["الأول متوسط","3","أوس بهجت احمد التركي","1171118019"],["الأول متوسط","3","احسان مهران بن عدنان عباس","1172505990"],["الأول متوسط","3","احمد يوسف أحمد الجبل","2383864895"],["الأول متوسط","3","انس ابن عابد بن عبد الله بن احمد الرايقي","1179116296"],["الأول متوسط","3","باهر هارون بن ابكر محمد","1168761797"],["الأول متوسط","3","بهاء بكر بن آدم فلاته","1171697905"],["الأول متوسط","3","جاسر علي حسن إسماعيل","2381589973"],["الأول متوسط","3","رائف عماد سالم بجبع",""],["الأول متوسط","3","ريان نبيل انعام مياجان","1168297438"],["الأول متوسط","3","صالح محمد صالح الطهراوي","2451119800"],["الأول متوسط","3","عبدالرحمن حسام حسن شعبان","1169908231"],["الأول متوسط","3","عبدالرحمن عثمان فيصل الغامدى","1167306941"],["الأول متوسط","3","عبدالله حمزه ابن محمد الزيلعي","1168092797"],["الأول متوسط","3","عبدالله طلال بن محمد حمود","1164331066"],["الأول متوسط","3","عبدالهادي مازن ابراهيم مغيربي","1170366924"],["الأول متوسط","3","علاء خالد بن يوسف بحه","1174516821"],["الأول متوسط","3","علي مناجي علي المرحبى","1174294676"],["الأول متوسط","3","فراس حسن فريد كابلى","1169497201"],["الأول متوسط","3","قصي ابن وهيب بن سعيد بن علي لبان","1168821864"],["الأول متوسط","3","محمد باسم بن محمدنور فلمبان","1170765026"],["الأول متوسط","3","محمد عبدالرحمن محمد فلمبان","1168724951"],["الأول متوسط","3","محمد ماجد بن محمد نهارى","1167482189"],["الأول متوسط","3","مشعل عبدالهادي صالح الغامدي","1171117342"],["الأول متوسط","3","نزار عبدالرحمن نزار باز","1169119482"],["الأول متوسط","3","يزيد أيمن محمد اليماني","1168077285"],["الأول متوسط","3","يوسف خالد علي مجرشي","1169938329"],["الأول متوسط","3","يوسف عبدالرحمن  العوبثاني","0160729510"],["الأول متوسط","4","أحمد رائد احمد بايحي","1169732425"],["الأول متوسط","4","أصيل لؤى ابن صالح نصير","1168856068"],["الأول متوسط","4","أنس بن عبد الكريم بن موسى الزهراني","1169646526"],["الأول متوسط","4","ابراهيم اسماعيل بن ابراهيم تكرونى","1168894796"],["الأول متوسط","4","ابوبكر حسن ابراهيم المسلمي","1169588843"],["الأول متوسط","4","احمد محمد احمد جعفري","1163714759"],["الأول متوسط","4","اسامه حسام اسامه عطرجى",""],["الأول متوسط","4","بتال عبدالله بن عابد الهلالي","1169157953"],["الأول متوسط","4","تركي عبده مكين ال مكين","1166087062"],["الأول متوسط","4","حسن ابن عبدالله بن احمد بن الحسين شريف","1173964345"],["الأول متوسط","4","حسن عمار حسن شاويش","1166642734"],["الأول متوسط","4","حسين طاهر بن الحسين العطاس","1170457848"],["الأول متوسط","4","خالد علي خلوفه الشهري","1170760779"],["الأول متوسط","4","خالد محمد اسماعيل بن عبدالقادر","1170683203"],["الأول متوسط","4","رواف ياسر حسن ابوهبشه","1168394839"],["الأول متوسط","4","زياد احمد جبريل عامري","1168391843"],["الأول متوسط","4","سند ابن محمود بن احمد السويد","1168268819"],["الأول متوسط","4","صالح بن لؤي بن طلال بن صالح الحسني","1164535534"],["الأول متوسط","4","عبدالرحمن عبدالخالق خميس الزهراني","1168514881"],["الأول متوسط","4","عبدالله بندر محمد ال ناصر","1171138124"],["الأول متوسط","4","عزام محمد بن عمر عجلان","1171599135"],["الأول متوسط","4","عمار عبدالله سعيد الحربي",""],["الأول متوسط","4","عمار عماد حمود المحياني","1167396827"],["الأول متوسط","4","عمر هشام حسن شبكى","1171227760"],["الأول متوسط","4","فايز خميس بن محمد الجحدلى","1171972746"],["الأول متوسط","4","فيصل نواف محمد الحربي","1169617626"],["الأول متوسط","4","محمد ماجد شارع السبيعي","1168648010"],["الأول متوسط","4","محمد هارون علي أكبر ناظر حسين","2396044956"],["الأول متوسط","4","معتز ماجد محمد الغامدي","1169835517"],["الأول متوسط","4","معلا عواد معلا العتيبي","1169733662"],["الأول متوسط","4","وسام عبدالمعطى ابن عبدالله بصنوى","1169484068"],["الأول متوسط","4","يحيى عادل بن أسعد المحمادي","1169320304"],["الأول متوسط","4","يوسف عبدالله محمد خبراني","1169400239"],["الأول متوسط","5","باسم ايهاب امين يماني","1168520938"],["الأول متوسط","5","بدر سعود بدر حركه","1168450631"],["الأول متوسط","5","براء محمد بن علي واصل","1170004327"],["الأول متوسط","5","خالد بندر خالد يوسف","1168779708"],["الأول متوسط","5","رائد بلقاسم بن علي القوزي","1172166223"],["الأول متوسط","5","سليمان جميل يوسف برقاوى","1168044905"],["الأول متوسط","5","عبدالعزيز سلطان مساعد الدوسري","1172009712"],["الأول متوسط","5","عبدالعزيز علي عبدالعزيز بيطار","1171355462"],["الأول متوسط","5","عبدالله بندر بن عبدالله زيني","1170764292"],["الأول متوسط","5","عبدالله عبدالعزيز طه نايته","1188440273"],["الأول متوسط","5","عدنان ابراهيم عدنان سمارن","1168034062"],["الأول متوسط","5","عمار عبدالله بن عبدالرحمن احمد","1170956294"],["الأول متوسط","5","عمر احمد بلال الزهراني","1184828471"],["الأول متوسط","5","عمر عبدالعزيز بن مصطفى زمزمي","1170171571"],["الأول متوسط","5","عمر عبدالله بن علي واصلي","1168874293"],["الأول متوسط","5","عمر هاشم سالم الحبشى","1169230818"],["الأول متوسط","5","فؤاد محمد فؤاد خوجه","1169905641"],["الأول متوسط","5","كايد خالد جمعان العرياني","0090492413"],["الأول متوسط","5","محمد ابراهيم محمد مصري","1167135811"],["الأول متوسط","5","محمد زيد بن حربي الحساني","1170251084"],["الأول متوسط","5","محمد عاصم بن يوسف مقلان","1170072225"],["الأول متوسط","5","محمد علاء بن مصطفى سقا","1169384060"],["الأول متوسط","5","معتز احمد بن علي متولى","1172755686"],["الأول متوسط","5","معتز احمد محمد مقبل","0160490120"],["الأول متوسط","5","نمر خالد محمد عبدالخالق","1169647763"],["الأول متوسط","5","وسام عامر علي عسيري","1186634380"],["الأول متوسط","5","يحي لؤي يحي البركاتي","1172229401"],["الأول متوسط","5","يزن حسان حسن فاضل","1170986713"],["الأول متوسط","6","أحمد مروان جمال ملاه","1169094685"],["الأول متوسط","6","أصيل ايمن بن صالح المورعى","1169825526"],["الأول متوسط","6","أمير محمد بن احمد خوجه","1170609869"],["الأول متوسط","6","ابراهيم عمار محمد نهاري","1170013195"],["الأول متوسط","6","الياس طارق محمد مباركي","1169214580"],["الأول متوسط","6","الياس عبيد عابد العضلي","1171990276"],["الأول متوسط","6","بتال عاطف عدنان العطاس","1170700056"],["الأول متوسط","6","تامر عدنان نور محمد علي مدن","2565112196"],["الأول متوسط","6","تميم سامي صالح الحربي","1170769184"],["الأول متوسط","6","ثابت سعد رجاء الحارثي","1179351331"],["الأول متوسط","6","حازم سعد رجاء الحارثي","1173624113"],["الأول متوسط","6","حسام محمد ضيف الله ابودرك","1181211556"],["الأول متوسط","6","راشد ابراهيم راشد الغامدي","1170024705"],["الأول متوسط","6","راكان خليل هاشم الهاشمي","2363217239"],["الأول متوسط","6","راكان محمد عبدالله التويم","1168012803"],["الأول متوسط","6","صهيب غسان بن حامد السفر","1168263562"],["الأول متوسط","6","عبدالباري ابراهيم ابن عبدالشكور بشناق","1170592065"],["الأول متوسط","6","عبدالرحمن احمد على الشمراني","1167076122"],["الأول متوسط","6","عبدالرحمن محمد سراج شيمى","1168827879"],["الأول متوسط","6","عبدالعزيز احمد عبدالعزيز سبحي","1171314824"],["الأول متوسط","6","عبدالغني حاسن بن عوض الفهمي","1170261927"],["الأول متوسط","6","عمر محمد أيده الاسود","1168049268"],["الأول متوسط","6","فيصل مؤيد فيصل عيدان","1171189713"],["الأول متوسط","6","قصى علي بن جمعان الزهراني",""],["الأول متوسط","6","محمد بن عبدالعزيز بن محمد كمال",""],["الأول متوسط","6","محمد بن محمود محمد عبد العال","2399876370"],["الأول متوسط","6","محمد سعد بن مسيعيد السلمي","1172075267"],["الأول متوسط","6","محمد صلاح الدين على عثمان بشير","2375544778"],["الأول متوسط","6","محمد عبدالرحمن محمد الوذيناني","1167109410"],["الأول متوسط","6","معتز عمر بن موسى زبرماوى","1167595501"],["الأول متوسط","6","يزن احمد ابراهيم حنبلى","1169949326"],["الأول متوسط","6","يزيد مشهور شاهر الشنبري","1168211058"],["الأول متوسط","7","أوس عاطف بن عبدالسلام ريم الله","1170596991"],["الأول متوسط","7","ابراهيم تركى عباس بخارى","1167647930"],["الأول متوسط","7","الوليد طلال بن احمد الحازمي","1170510588"],["الأول متوسط","7","اياد خالد بن سالم القشيري","1171000266"],["الأول متوسط","7","تميم عدنان بن سليمان الحازمي","1171156589"],["الأول متوسط","7","خالد بن سامح بن عبدالخالق القرني",""],["الأول متوسط","7","خالد محمد  مخزوم","0150760357"],["الأول متوسط","7","خليل الله بن فيصل بن خليل الله الهدي نجمي","1169986484"],["الأول متوسط","7","سمير ابراهيم منصور الحربي","1171368879"],["الأول متوسط","7","طلال عبدالله بن عبدالرحمن الناشرى","1174380491"],["الأول متوسط","7","عبدالرحمن زياد عبدالرحمن بحه","1169312889"],["الأول متوسط","7","عبدالرحمن محمد بن عمر تكروني","1171202219"],["الأول متوسط","7","عبدالرحيم رافت بن حسن تازى","1168886925"],["الأول متوسط","7","عبدالعزيز اسامه بن سالم خراط","1170793275"],["الأول متوسط","7","عبدالله ربيع بن هزاع الحذيفي","1170779381"],["الأول متوسط","7","عبدالله سليمان فيحان الهنيدي","1170905853"],["الأول متوسط","7","عبدالله محمد على الشهرى","1168197539"],["الأول متوسط","7","عثمان حامد حمدان الندوى","1167876224"],["الأول متوسط","7","عمر ماجد عبدالله حيطان","1171420001"],["الأول متوسط","7","عمر محمد عمر فلاته","1172935254"],["الأول متوسط","7","قيس عطيه على المالكى","1168682324"],["الأول متوسط","7","كنان هيثم عبدالقادر نتو","1168379988"],["الأول متوسط","7","مجد عبدالوهاب ابن حسن فلمبان","1169025812"],["الأول متوسط","7","محمد ابراهيم علي الحسني","08905156"],["الأول متوسط","7","محمد ياسر محمد حميده","2401019365"],["الأول متوسط","7","معن عبد الله باشا عبد الرحمن","2451475020"],["الأول متوسط","7","مناف متعب سعيد المالكي","1169029848"],["الأول متوسط","7","يزن علي صالح الزهرانى","1168882908"],["الأول متوسط","7","يمان رائد عبدالله الطويرقي","1168795506"],["الأول متوسط","8","أوس خالد حافظ عبدالغفور","1170881948"],["الأول متوسط","8","تركي عبدالله - بخش","2397978590"],["الأول متوسط","8","ثامر عبدالرحمن ابراهيم عسيري","1169986922"],["الأول متوسط","8","جسار علي بن غرسان الزهراني","1160525018"],["الأول متوسط","8","جواد علاء بن عبدالرحمن الغامدي","1170140519"],["الأول متوسط","8","حمد تركي عبدالله المبارك","1181665736"],["الأول متوسط","8","حمزة طراد منسي الشريف","1168541546"],["الأول متوسط","8","رواد علاء عاطف حنيف",""],["الأول متوسط","8","ريان بسام ياسين الفي","1172830786"],["الأول متوسط","8","سعيد خالد بن سعيد باوزير","1169826045"],["الأول متوسط","8","عبدالعزيز علي بن غرسان الزهراني","1174921179"],["الأول متوسط","8","عبدالله معيض عوض القرني","1170368607"],["الأول متوسط","8","عبدالملك زهير بن عباس خيرالله","1170494031"],["الأول متوسط","8","علي محمد علي زولي","1166507101"],["الأول متوسط","8","عمر بدر عمر باداود","1170526881"],["الأول متوسط","8","عمر جميل عاطى الطفيحي","1169546957"],["الأول متوسط","8","عمر زبير عبده محيي الدين","2391328578"],["الأول متوسط","8","عمر فائز حبيب الصاعدى","1170526931"],["الأول متوسط","8","عمر هاشم عمر الحجاجى","1171936360"],["الأول متوسط","8","فهد فادى فهد دهلوى","1164026054"],["الأول متوسط","8","كنان محمد بن بطيحان المسعودي","1181426063"],["الأول متوسط","8","مجد وليد محمد جمبى","1168056271"],["الأول متوسط","8","محمد تركى بن محمد قشلان","1167296258"],["الأول متوسط","8","محمد عبدالله عبيدالله العتيبي","1171098021"],["الأول متوسط","8","محمد فيصل عبدالله الصاعدي","1174787786"],["الأول متوسط","8","مراد بن علي بن عبدالله بن فيصل ال صويلح القرني","1169584677"],["الأول متوسط","8","معاذ خالد عبدالله باهيثم","2401718917"],["الأول متوسط","8","منصور زياد منصور بالبيد","1171028903"],["الأول متوسط","8","نواف فيصل عبدالعزيز الخزاعى","1172407593"],["الثاني متوسط","1","أحمد شاكر بن فهد العتيبي","1163512237"],["الثاني متوسط","1","أحمد محمد احمد القرنى","1163779612"],["الثاني متوسط","1","ابراهيم راحب نور محمد","2377348962"],["الثاني متوسط","1","بدر عامر علي عسيري","1166598837"],["الثاني متوسط","1","بندر محمد بن مشعل العميري","1165825736"],["الثاني متوسط","1","حاتم سعد مشبب الاحمري","1165042878"],["الثاني متوسط","1","خالد ابن بندر بن عبدالله الغامدي","1166837557"],["الثاني متوسط","1","رزق الله بن علي بن رزق الله الزرعي الزهراني","1165572783"],["الثاني متوسط","1","رواد احمد بن عوض السلمي","1162529521"],["الثاني متوسط","1","ريان سمير بن صالح سقطي","1186622179"],["الثاني متوسط","1","ريان علي سعد المولد","1165381623"],["الثاني متوسط","1","سالم ممدوح بن سالم باكري","1166776615"],["الثاني متوسط","1","صهيب معاذ محمد الحربى","1162666802"],["الثاني متوسط","1","عبدالاله محمد يوسف فطاني","1164425991"],["الثاني متوسط","1","عبدالرحيم عمر بن حامد صائغ","1164224659"],["الثاني متوسط","1","عبدالعزيز فهد بن عطيه الصبحى","1175235314"],["الثاني متوسط","1","عبدالله ابن بسام بن عبدالله الغامدي","1166899102"],["الثاني متوسط","1","عدي عبدالله احمد الشريف",""],["الثاني متوسط","1","علي عثمان بن محمد بكر","1168554465"],["الثاني متوسط","1","عمر رايد حسن زمزمي","1167193760"],["الثاني متوسط","1","عمر محمد قاسم - كالومياه","2406317384"],["الثاني متوسط","1","غسان احمد وديع مرسى","1166377620"],["الثاني متوسط","1","كنان عادل عبدالله زراع","1167433851"],["الثاني متوسط","1","محمد ابن رائد بن محمد بن عبد المؤمن عمراني","1166251361"],["الثاني متوسط","1","محمد راكان محمد القرشي","1163858218"],["الثاني متوسط","1","محمد رامي سعيد باقاسي","1163321241"],["الثاني متوسط","1","محمد عبدالصمد بن فضل الرحمن مصطفي","1164705160"],["الثاني متوسط","1","محمود احمد محمود الهذلي","1163679929"],["الثاني متوسط","1","منسي محمد منسي الشريف","1165683838"],["الثاني متوسط","1","وسيم بن فؤاد بن عبدالله هزازي","1164309237"],["الثاني متوسط","1","يوسف حسن علي حمران","2368309478"],["الثاني متوسط","1","يوسف حسن محمد على كافى","1164207811"],["الثاني متوسط","1","يوسف عبدالله صلاح الصبحى","1166461606"],["الثاني متوسط","2","تركي احمد سعيد الدعيس","1176687661"],["الثاني متوسط","2","جابر محمد بن جابر الفاهمي","1162910580"],["الثاني متوسط","2","جاسر خميس بن محمد الجحدلى","1163926817"],["الثاني متوسط","2","رواد سعد بن منصور العصيمي","1166050003"],["الثاني متوسط","2","زياد سليم ضمير حسين - سيد الأمين","2402594408"],["الثاني متوسط","2","زين عبدالله زين العطاس","2362446334"],["الثاني متوسط","2","ساري سعيد جميل فلفلان","1163344045"],["الثاني متوسط","2","سالم سلمان سالم عبدالعاطي","1166749968"],["الثاني متوسط","2","صالح سامي بن صالح هوساوي","1166279727"],["الثاني متوسط","2","عبدالرحمن ريان عبدالرحمن الاهدلي","1163911538"],["الثاني متوسط","2","عبدالعزيز ابراهيم عبده زبيدي","1165660745"],["الثاني متوسط","2","عبدالعزيز بن ياسر بن سعود بن مسعود الجميعي","1164534024"],["الثاني متوسط","2","عبدالعزيز وائل محمد الثبيتى","1167155041"],["الثاني متوسط","2","عبدالله ماجد عبدالله الاحمري","1164837633"],["الثاني متوسط","2","عبدالمجيد يوسف بن صالح جمل الليل","1168505384"],["الثاني متوسط","2","عدي محمد بن عبيد الهاشمي الامير","1166400596"],["الثاني متوسط","2","عزام عبدالله حامد الشبلي","1165908417"],["الثاني متوسط","2","عمر عبدالعزيز سعود الثبيتي","1164473256"],["الثاني متوسط","2","عمر غالب بن محمد حامظي","1164352443"],["الثاني متوسط","2","عمر محمد علي المحويتي","2374883938"],["الثاني متوسط","2","عنان وليد بن يوسف حافظ","1165591445"],["الثاني متوسط","2","فيصل فادي فوءاد محمدحسين","1164591552"],["الثاني متوسط","2","كنان عبدالقادر حسن مخلص","1167282498"],["الثاني متوسط","2","محمد ياسر عمر بدري","1166170181"],["الثاني متوسط","2","محمود نايف محمود عريف","1166504520"],["الثاني متوسط","2","نايف عمار عبدالله شبانه","1165019371"],["الثاني متوسط","2","هاشم نواف عبدالمعين العبدلي","1171360777"],["الثاني متوسط","2","ياسر            اياد            محمد            البريم","2376987661"],["الثاني متوسط","2","يحيى تركي محمد بن يحي","1170025892"],["الثاني متوسط","2","يحيى علي احمد قرموش","1164947929"],["الثاني متوسط","2","يوسف احمد بن عدنان احمد","1162094989"],["الثاني متوسط","2","يوسف ايهاب يحي بهكلي","1164070920"],["الثاني متوسط","2","يوسف عبدالله هارون ميمني","1165467992"],["الثاني متوسط","3","باهر ابن صالح بن احمد سعيد","1165296680"],["الثاني متوسط","3","بتال علي مغلفق القحطاني","1166284412"],["الثاني متوسط","3","تركي نائف مساعد الزهراني","1162507980"],["الثاني متوسط","3","جسار سحبان عبده واصلي","1166464535"],["الثاني متوسط","3","جعفر فؤاد بن جعفر عبدالعزيز","1163353806"],["الثاني متوسط","3","جواد وجدى محمد غندوره","1168575890"],["الثاني متوسط","3","حسن بسام بن حسن ادريس","1166449742"],["الثاني متوسط","3","حسين احمد حسن باعقيل","2351915505"],["الثاني متوسط","3","حمزه سعيد بن احمد اكرم","1164884858"],["الثاني متوسط","3","خليل بشير بن ابوبكر فلاته","1167095023"],["الثاني متوسط","3","رامي سامى بن وصل الحازمى","1164198440"],["الثاني متوسط","3","زياد عبدالله احمد محزري","1167172962"],["الثاني متوسط","3","زياد عبدالله غنيمان ال غنيمان","1165840206"],["الثاني متوسط","3","سعود فايز بن غيث الهاشمي الامير","1164910679"],["الثاني متوسط","3","عبدالرحمن بسام بن عبدالواحد كشميري","1163873100"],["الثاني متوسط","3","عبدالرحمن فضل معتوق منشى","1170343204"],["الثاني متوسط","3","عبدالعزيز امين عمر كنا","1164150029"],["الثاني متوسط","3","عبدالله صلاح عمر سلمان","33851322"],["الثاني متوسط","3","عبدالله ممدوح على شوشو","1165757434"],["الثاني متوسط","3","عبدالملك محمد بن حمزه منسي","1165353044"],["الثاني متوسط","3","عبدالوهاب احمد علي الشنبري الشريف","1169259163"],["الثاني متوسط","3","علي احمد علي الشنبري الشريف","1161995863"],["الثاني متوسط","3","عمار باز ناصر الشريف","1167936358"],["الثاني متوسط","3","عمر عبدالودود ابن عمر محمد","1166626356"],["الثاني متوسط","3","قصي ابو بكر سعيد باوزير","2360455626"],["الثاني متوسط","3","كريم عبدالرحمن محمدشوقى جمبى","1165201904"],["الثاني متوسط","3","لؤي             محمد            حمود            عجلان","2352026294"],["الثاني متوسط","3","معتز بكر محمد فلاته","1166606036"],["الثاني متوسط","3","معن رامي سعيد باقاسي","1163321159"],["الثاني متوسط","3","مهند خالد سيف الرحمن حياة","1165808963"],["الثاني متوسط","3","وسام فيصل عبدالرحمن الزهراني","1165704253"],["الثاني متوسط","3","يامن حاتم ابراهيم الشدوى","1164566059"],["الثاني متوسط","3","يعقوب علي مغلفق القحطاني","1160756522"],["الثاني متوسط","3","يوسف هشام حسن شبكى","1164855361"],["الثاني متوسط","4","أصيل خالد بن علي الهاشمي الامير","1169810072"],["الثاني متوسط","4","أواب عبدالمنعم بن احمد القاسم","1168473039"],["الثاني متوسط","4","اياد بن محمد بن هادي الشهراني","1162854044"],["الثاني متوسط","4","اياد عمر احمد ابوسعيد","1165340140"],["الثاني متوسط","4","حسام سامر سعيد بلحمر","1164613281"],["الثاني متوسط","4","رضا عبدالرحيم اسحاق صالح","1182960664"],["الثاني متوسط","4","رواد عبدالله صديق مغربى","1167453461"],["الثاني متوسط","4","رياض مازن بن عيدان الزهراني","1166972651"],["الثاني متوسط","4","ريان عبدالرحيم عبدالخالق حولدار","1166530962"],["الثاني متوسط","4","ريان عبدالله علي شيبان زبيدي","2365480165"],["الثاني متوسط","4","ريان معتوق خالد كيكي","1164695700"],["الثاني متوسط","4","عبدالرحمن علي محمد الغامدي","1165545250"],["الثاني متوسط","4","عبدالعزيز جميل بن صديق المولد","1165444405"],["الثاني متوسط","4","عبدالله خالد مولانا وصي الرحمن حاجي","2385355173"],["الثاني متوسط","4","عبدالله فيصل ابن خالد البركاتى","1167638749"],["الثاني متوسط","4","عدي حسن عبدالعزيز هوساوى","1164181875"],["الثاني متوسط","4","عز عصام عبدالعزيز بشاورى","1162602310"],["الثاني متوسط","4","علاء نايف بن ادم هوساوى","1165381375"],["الثاني متوسط","4","علي بندر بن محمد الشمراني","1163299397"],["الثاني متوسط","4","عناد فهد بن عبدالله الشنبرى","1165803071"],["الثاني متوسط","4","فهد نواف بن احمد تيرو","1164815522"],["الثاني متوسط","4","ماجد مشهور بن صنات العتيبي","1165990332"],["الثاني متوسط","4","محسن هاشم بن محمد لبان","1166944841"],["الثاني متوسط","4","محمد اسعد بن سعود بن مسعود الغالبي الشريف","1166403269"],["الثاني متوسط","4","مشعل نزار بن محمد سخاخني","1162932766"],["الثاني متوسط","4","نواف سامي عبيد الجحدلي","1163817388"],["الثاني متوسط","4","هادي سامى بكر سمدانى","1163172115"],["الثاني متوسط","4","وائل محمد فؤاد خوجه","1165532696"],["الثاني متوسط","4","وسام فارس حمدان المالكى","1166242865"],["الثاني متوسط","5","أحمد حسين عمر الحبشي","1162690612"],["الثاني متوسط","5","أحمد ساهر شاهر كتبي","1162897134"],["الثاني متوسط","5","أحمد محمد بن احمد يماني","1162003220"],["الثاني متوسط","5","أحمد نايف ابن مساعد المحمادي","1162879132"],["الثاني متوسط","5","أسامه غالب احمد على","1162774754"],["الثاني متوسط","5","أمير طلال حمزه منقاوى","1163534025"],["الثاني متوسط","5","أنس ابراهيم سعد السلمي","1163272246"],["الثاني متوسط","5","أيمن موسى ابن سليمان الصحبي","1162294365"],["الثاني متوسط","5","احمد عبدالله احمد شريف","1173964626"],["الثاني متوسط","5","احمد عيدان علي الزهراني","1166562403"],["الثاني متوسط","5","اسامه ايمن بن عبدالله حافظ","1162688020"],["الثاني متوسط","5","الياس محمد حمزه سمارن","1163017252"],["الثاني متوسط","5","امجد            محمد            عبدالرحمن       الجيلاني","2364836482"],["الثاني متوسط","5","اياد عبداللة علي كمبيجي","1184802203"],["الثاني متوسط","5","جواد صالح محمد العبدلي","1164558791"],["الثاني متوسط","5","حمزه محمد عبدالله ابوحنش","1167571080"],["الثاني متوسط","5","خالد عمر مجير الجحدلي","1166284107"],["الثاني متوسط","5","خالد محمد خالد العسيمى","1168156519"],["الثاني متوسط","5","خالد محمد عبدالكريم الرابغي","1164320911"],["الثاني متوسط","5","رواد فواز عبدالحميد مازى","1165315282"],["الثاني متوسط","5","زيد احمد بن عبدالله الشميري","1164560243"],["الثاني متوسط","5","عبدالرحمن عبدالفتاح بن حسن قطان","1163927260"],["الثاني متوسط","5","عبدالعزيز شكران عصام بصنوي","1166016095"],["الثاني متوسط","5","عبدالله رافت بن حسين الوافى","1165201607"],["الثاني متوسط","5","عبدالله عبدالمحسن عبدالله آل حسين","1163266313"],["الثاني متوسط","5","عمر ريان عمر منشاوى","1164720284"],["الثاني متوسط","5","عمر منير بن محمد الدعيس","1165506146"],["الثاني متوسط","5","غسان حامد ابن عبدالله حبيب","1165620350"],["الثاني متوسط","5","محمد عبدالحليم عبدالعزيز فطاني","1164239343"],["الثاني متوسط","5","محمد عبدالرحمن محمد حافظ","1165664481"],["الثاني متوسط","5","محمد منصور بن سعيد بالبيد","1165827740"],["الثاني متوسط","5","مهند أحمد سعيد المجنونى","1162706939"],["الثاني متوسط","5","نوح طه نوح مرق","2359879893"],["الثاني متوسط","5","يحي عبدالفتاح بن يحي صعيدي","1163982398"],["الثاني متوسط","5","يزن حمزة عمر سليمان","2391774623"],["الثاني متوسط","6","أحمد انس محمد امين كلنتن","1164600221"],["الثاني متوسط","6","أحمد تركى ابن حمد الهاشم","1164120782"],["الثاني متوسط","6","أحمد عادل حبيب اللهيبي","1163970252"],["الثاني متوسط","6","أحمد مازن مراد بنجر","1163630252"],["الثاني متوسط","6","أسامة سعود بن مطار عميري","1164895326"],["الثاني متوسط","6","احمد موسى بن عيسى بقعان","1163944190"],["الثاني متوسط","6","اسامه ايمن بن صالح المورعى","1164763847"],["الثاني متوسط","6","اسماعيل عبدالمجيد سامي سليماني","1164498238"],["الثاني متوسط","6","اسماعيل يوسف فايز الرحيلي","1164529339"],["الثاني متوسط","6","البراء خالد عثمان الزهرانى","1163811498"],["الثاني متوسط","6","الحسن مروان الحسين العطاس","1163633868"],["الثاني متوسط","6","تيسير بدر معتوق نصير","1164944793"],["الثاني متوسط","6","ثامر وائل ناصر غزاوي","1168219994"],["الثاني متوسط","6","جاسر جهاد نزار السراج","1165476639"],["الثاني متوسط","6","حمزه أمجد محمود وزان","1165068865"],["الثاني متوسط","6","رواد ابن يوسف بن محمد اليماني","1164472233"],["الثاني متوسط","6","عبدالحليم عكاشه ادم هوساوي","1167173465"],["الثاني متوسط","6","عبدالله عابد بن محمد السرواني","1166137818"],["الثاني متوسط","6","عبدالله مازن ابراهيم الزامل","1165076975"],["الثاني متوسط","6","علي اسامه عمر سندي","1165011154"],["الثاني متوسط","6","عماد محمد بن ساعد الزهراني","1165373919"],["الثاني متوسط","6","عمار ابن ايمن ابن محمد علي العمري الحربي","1163599184"],["الثاني متوسط","6","فايز عبدالله بن محمد العامري","1166868354"],["الثاني متوسط","6","مازن اكرم محمد النجار","1165900828"],["الثاني متوسط","6","مازن عبدالرحيم عبدالرحمن السليماني","1163346545"],["الثاني متوسط","6","ماهر هتان صالح باشا","1161922461"],["الثاني متوسط","6","نايف حمود قاسم مرق","2353252543"],["الثاني متوسط","6","وسيم احمد بن هاشم زقزوق","1159927464"],["الثاني متوسط","6","يوسف عبدالحكيم بن مبارك ذيبان","1161700586"],["الثاني متوسط","7","أصيل سمير سراج فلاته","1165923838"],["الثاني متوسط","7","أنس ماجد بن عبدالله المالكى","1164692806"],["الثاني متوسط","7","احمد مصلح احمد احمد","1164874099"],["الثاني متوسط","7","اسامه فؤاد مستور الزهراني","1164800557"],["الثاني متوسط","7","الحسن محمد حمزه همى حمام","1165606615"],["الثاني متوسط","7","الياس معتز عيدروس باروم","1164703827"],["الثاني متوسط","7","انمار احمد بن بكر تيجاني","1162596652"],["الثاني متوسط","7","اياد عبدالله محمد النقاش","1171118886"],["الثاني متوسط","7","بدر عبدالعزيز بن احمد باسلامه","1164594424"],["الثاني متوسط","7","براء غريب بن حسين زهوان","1165298413"],["الثاني متوسط","7","بسام عزام عبدالعزيز بشاورى","1164949529"],["الثاني متوسط","7","تركي عبدالله عويبد السلمي","1166399129"],["الثاني متوسط","7","جهاد صالح علي الزهراني","1166776599"],["الثاني متوسط","7","رواد جعفر عبدالقادر فيرق","1162750879"],["الثاني متوسط","7","رواد سامي علي الزهراني","1165077684"],["الثاني متوسط","7","ريان يوسف عنايةالله السهلي","1162862229"],["الثاني متوسط","7","زياد عبدالله عبدالرحمن السليماني","1164654863"],["الثاني متوسط","7","سعود بن مساعد بن ساعد الفهمي","1167520947"],["الثاني متوسط","7","سليمان محمد - عبدالله","2389938172"],["الثاني متوسط","7","شاهر محمد بن شاهر الشريف","1165417062"],["الثاني متوسط","7","عبدالاله محمد بن عبدالاله الحميري","1165954908"],["الثاني متوسط","7","عبدالرحمن محمد محمد جاويد","2344150384"],["الثاني متوسط","7","عبدالله تركي محمد التركي","2356888012"],["الثاني متوسط","7","عبدالله جميل حسين مؤمنه","1164370817"],["الثاني متوسط","7","علي بن عبدالله بن عبدالرحمن الناشري","1169267885"],["الثاني متوسط","7","عمر محمد جميل الياس","1166048007"],["الثاني متوسط","7","قصي ايهاب عبدالباري ملوك","1166466621"],["الثاني متوسط","7","كنان ابراهيم محمدرضا صدقه","1165413491"],["الثاني متوسط","7","محمد علي بن صالح باتي","1163984378"],["الثاني متوسط","7","محمد ماهر فؤاد بنجر","1166193852"],["الثاني متوسط","7","مراد حسام حسان مشاط","1167069804"],["الثاني متوسط","7","نواف محمد صالح الهاشمي الامير","1166863124"],["الثاني متوسط","7","وسام نائف عبدالله الغامدي","1164169342"],["الثاني متوسط","7","ياسين بن أيمن بن اسامة أربعين","1165557883"],["الثاني متوسط","8","أحمد خليفة كامل الحكيم","2355803988"],["الثاني متوسط","8","أحمد عواض نوار العصيمي","1181441047"],["الثاني متوسط","8","أسامه خالد بن عبدالله الزهرانى","1164519793"],["الثاني متوسط","8","أسامه عبدالرحمن عبدالله العلوي","1169582648"],["الثاني متوسط","8","أمير انمار سمير ازهري","1168681656"],["الثاني متوسط","8","أنمار عبدالله صدقة بيطار السيد","1163051046"],["الثاني متوسط","8","ابراهيم محمد ابراهيم عثمان","1163094996"],["الثاني متوسط","8","احمد اسامه احمد عجاج","2359979305"],["الثاني متوسط","8","احمد شوقي احمد محمد","2355840733"],["الثاني متوسط","8","احمد عزيز الرحمن - عبد الرحمن","2381607262"],["الثاني متوسط","8","الحسين محمد حمزه همى حمام","1165606680"],["الثاني متوسط","8","الياس ابراهيم عبدالله ازهر","1166356871"],["الثاني متوسط","8","بندر محمد بكري القرني","1165518927"],["الثاني متوسط","8","جواد سعيد بن عبدالاله عنقاوي الشريف","1165883909"],["الثاني متوسط","8","جواد عمادالدين عبدالرازق عبدالرازق","2360709071"],["الثاني متوسط","8","حامد أسامه بن حامد قوقندي","1162590184"],["الثاني متوسط","8","حسام بن عبدالله بن عاتق المحمادي الحربي","1166359669"],["الثاني متوسط","8","رواء عاطف فؤاد عريف","1165290691"],["الثاني متوسط","8","رواد سعيد بن عبدالاله عنقاوي الشريف","1165884071"],["الثاني متوسط","8","زياد محمد خالد عبدالله","1163406174"],["الثاني متوسط","8","سند عامر عايد الرفاعي","1165536085"],["الثاني متوسط","8","عبدالعزيز احمد ابن ابراهيم حسنين","1167868304"],["الثاني متوسط","8","عبدالعزيز محمد بن عبدالرزاق بهاى","1163869793"],["الثاني متوسط","8","عبدالله عمر اجيغ سمبس قاروت","1161999048"],["الثاني متوسط","8","عبدالله مشعل عبدالله الحربي","1164173013"],["الثاني متوسط","8","عبدالملك مروان محمدنور مؤذن","1164726158"],["الثاني متوسط","8","عمرو محمد عبدالغني دقنه","1169387345"],["الثاني متوسط","8","فيصل خالد بن عمر الغامدي","1166698876"],["الثاني متوسط","8","محمد احمد محمد بارسين","1164386284"],["الثاني متوسط","8","معن ابن انمار بن موفق بن احمد فلمبان","1171123928"],["الثاني متوسط","8","نائف نواف صنات العتيبي","1167242336"],["الثاني متوسط","8","نبيل ماجد عبدالله بخارى","1166192714"],["الثاني متوسط","8","نواف بندر عبدالعزيز الحارثي","1166584530"],["الثاني متوسط","8","هشام طه احمد مباركي","1166394112"],["الثاني متوسط","8","يحي بن وليد بن يحي هوساوي","1165124338"],["الثالث متوسط","1","أويس محمد عبدالغني دقنه","1169387303"],["الثالث متوسط","1","تركي نواف بن محمد بامنصور","1161010408"],["الثالث متوسط","1","جسار عمرو بن محمدصالح موصلي","1159018603"],["الثالث متوسط","1","جهاد باسم اسماعيل غزاوى","1160107072"],["الثالث متوسط","1","حسن غسان حسن حجازي","1161784283"],["الثالث متوسط","1","خالد عماد بن محمد الزهراني","1168706438"],["الثالث متوسط","1","رائف فايق بن محمد الهندى","1162541542"],["الثالث متوسط","1","ريان عبدالرحيم اسحاق صالح","1162164097"],["الثالث متوسط","1","زياد احمد عبدالسلام الهوساوي","1155813536"],["الثالث متوسط","1","طلال ريان طلال كفيه","1161792906"],["الثالث متوسط","1","عبدالجبار حسان محمد صديق سيت","1170227233"],["الثالث متوسط","1","عبدالحميد جلال عبدالحميد عبدالوهاب","1157899137"],["الثالث متوسط","1","عبدالله محمد جمعة مخزوم","3666847987"],["الثالث متوسط","1","عزام صديق محمد البرناوى","1159143468"],["الثالث متوسط","1","عماد عبدالرحمن حماد الحسنانى","1160418909"],["الثالث متوسط","1","عمر محمد كامل الحكيم","2059198715"],["الثالث متوسط","1","عمرو حسن صدقه حميش","1162140121"],["الثالث متوسط","1","فراس محمد بن عبدالله عياش","1160207773"],["الثالث متوسط","1","فيصل احمد سعيد العسافي","1171112129"],["الثالث متوسط","1","قصي عمرو خالد سندي","1159464633"],["الثالث متوسط","1","كنان بهجت بن محمد مليباري","1161643489"],["الثالث متوسط","1","محمد بدر عبدالله الصبحي","1159787918"],["الثالث متوسط","1","محمد بن حسين بن محمد الشمبري","1163651811"],["الثالث متوسط","1","محمد سامي محمد سندي","1161558844"],["الثالث متوسط","1","محمد عمر بن سراج حلوانى","1165033133"],["الثالث متوسط","1","محمد فؤاد بدري بكري عساس","1164639385"],["الثالث متوسط","1","محمد نايف بن محمد رفه","1162383036"],["الثالث متوسط","1","محمد نايف محمد الزهراني","1161474992"],["الثالث متوسط","1","معاذ عبداللطيف بن عبدالله الشميري","1160950638"],["الثالث متوسط","2","أحمد علاء عبدالله فلمبان","1174537041"],["الثالث متوسط","2","أويس اياد بن سمير دقنه","1156906362"],["الثالث متوسط","2","اوس سمير بن سلطان اللهيبي","1162546707"],["الثالث متوسط","2","تامر احمد محمد الجهني","1160343511"],["الثالث متوسط","2","حسن فواد ابن حسن العبدلي","1154605610"],["الثالث متوسط","2","حمزة اسعد سعود الشريف","1159124823"],["الثالث متوسط","2","خبيب اسامه محمد شيخ","1160291249"],["الثالث متوسط","2","دانيال غالب محمد اليماني","1161847890"],["الثالث متوسط","2","راكان محمد عبداللطيف الحربي","1159760576"],["الثالث متوسط","2","ريان على بن محمد البرناوي","1163660234"],["الثالث متوسط","2","سعيد محمد سعيد الخزاعى","1167365657"],["الثالث متوسط","2","سليمان محمد حسين بيطار","1160876981"],["الثالث متوسط","2","سمير انمار سمير ازهري","1159851177"],["الثالث متوسط","2","صالح عبدالرحمن صالح الوذينانى","1161457120"],["الثالث متوسط","2","صالح نوح احمد مرق","6041290212"],["الثالث متوسط","2","طارق هاشم عمر علوى","1165746130"],["الثالث متوسط","2","عادل علاء بن عادل البناالصباغ","1159158516"],["الثالث متوسط","2","عبدالرحمن ابراهيم عبدالرحمن النفيسي","1168008207"],["الثالث متوسط","2","عبدالرحمن عبدالله عمر كنا","1159604683"],["الثالث متوسط","2","عبدالعزيز احمد بن عبدالله الشريف","1162038481"],["الثالث متوسط","2","عبدالملك مروان بن محمد الحرم","1158754133"],["الثالث متوسط","2","علي ابراهيم بن الامام الشنقيطي","1158738797"],["الثالث متوسط","2","عماد سامى خليفه المولد","1156954651"],["الثالث متوسط","2","عمر وحيد زايد ابو غبره","1162249484"],["الثالث متوسط","2","فراس نعيم محمد كابلي","1160205900"],["الثالث متوسط","2","كنان علي محمدصالح ملا","1161277122"],["الثالث متوسط","2","كنان وليد بن يوسف حافظ","1163140104"],["الثالث متوسط","2","محمد عبدالعزيز بن محمود فلاته","1160646525"],["الثالث متوسط","2","محمد ماجد محمدزكى تركستانى","1162999914"],["الثالث متوسط","2","محمد مازن محمدامين سلتي","1162998882"],["الثالث متوسط","2","معتز ربعي بن غايب المقاطي","1166924876"],["الثالث متوسط","2","ملهم خالد بن سنوسي زيني","1159699394"],["الثالث متوسط","2","وائل مسلم حسين الجحدلى","1161717978"],["الثالث متوسط","2","ياسين اياد بن محمود مصباح","1160182919"],["الثالث متوسط","3","اوس نايف محمد النفيسي","1161558091"],["الثالث متوسط","3","حسن أحمد حسن باعقيل","2327199416"],["الثالث متوسط","3","حسين طه حسين المهدي","2472881867"],["الثالث متوسط","3","خالد اسامه يعقوب برناوي","1160192389"],["الثالث متوسط","3","خالد بن بندر بن محمد بن علي ال ناصر","1160835995"],["الثالث متوسط","3","خالد سلطان بن ماطر الجحدلى","1160696637"],["الثالث متوسط","3","خالد محمد بن عايش الحربي","1162106379"],["الثالث متوسط","3","سلمان عبدالعزيز بن احمد الشريف","1162139099"],["الثالث متوسط","3","صالح مازن صالح باودود","1159057320"],["الثالث متوسط","3","طلال ماجد محمد الغامدي","1164166959"],["الثالث متوسط","3","عبدالرحمن احمد محمد بدوي","1159109626"],["الثالث متوسط","3","عبداللطيف معاذ عبداللطيف بوبسيط","1159349065"],["الثالث متوسط","3","عبدالله عبدالاله ابن هزاع جفرى","1161521537"],["الثالث متوسط","3","عبدالله محمد عبدالله المسعودى","1166102317"],["الثالث متوسط","3","علي محمد علي العمودي","2324210869"],["الثالث متوسط","3","عمر عبدالرحيم بن احمد شريف عبدالمطلب","1161261613"],["الثالث متوسط","3","عمرو عبدالرحيم ابن عبدالغني منشاوي","1162083768"],["الثالث متوسط","3","فادي وليد بن محمد مليباري","1161181092"],["الثالث متوسط","3","فارس محمد حامد قدير","1172889873"],["الثالث متوسط","3","فراس فيروز احمد عظيم الدين","2388801264"],["الثالث متوسط","3","قصى صلاح محمد البيشى","1162227365"],["الثالث متوسط","3","مؤيد صديق محمد سيت","1160917660"],["الثالث متوسط","3","ماهر بن بسام بن صويلح الفهمي","1160036297"],["الثالث متوسط","3","محمد بندر عبدالعزيز الحارثي","1158039618"],["الثالث متوسط","3","محمد عبدالرحمن بن معتوق اخن السليماني","1162827776"],["الثالث متوسط","3","مراد هاني هياس الزهراني","1163167842"],["الثالث متوسط","3","هاشم عبدالله عبدالرزاق شاه بهاى","1163859935"],["الثالث متوسط","3","واجد عبدالرزاق احمد نيابا","2376091159"],["الثالث متوسط","3","وهيب سامى ابن سمير الطف","1162771347"],["الثالث متوسط","3","يزن عاطف بن عبدالسلام ريم الله","1159631736"],["الثالث متوسط","3","يزيد ابن عبدالرحمن بن عبدالله بن حاسن الغامدي","1162798589"],["الثالث متوسط","3","يوسف أسامه احمد المحمد","1159675444"],["الثالث متوسط","3","يوسف محمد ابراهيم الشمرانى","1160308837"],["الثالث متوسط","4","أنس حسن بن سعد الحربي","1161794506"],["الثالث متوسط","4","بتال احمد بن خضر الفهمى","1159274867"],["الثالث متوسط","4","جواد فواد ابن حسن العبدلي","1158851012"],["الثالث متوسط","4","حسام رائد جمال حمزة المصرى","1160098313"],["الثالث متوسط","4","حمزه ماجد محمد شريح","2322094869"],["الثالث متوسط","4","خالد يوسف خالد نصار","2457422232"],["الثالث متوسط","4","خليفه بن سلطان بن خليفه الحارثي","1153014921"],["الثالث متوسط","4","رائف عبدالله صديق مغربى","1161581077"],["الثالث متوسط","4","ريان فلاح بن سالم المجنونى","1161072184"],["الثالث متوسط","4","زياد فواز بن عبادي خياط","1159938859"],["الثالث متوسط","4","سالم محمد ابن علي العسيري","1161864507"],["الثالث متوسط","4","سامي احمد محمد الزهراني","1160873624"],["الثالث متوسط","4","سعد محمد سعد آل بن حسين","1154005357"],["الثالث متوسط","4","سلطان محمد طه عبدالله","2389937422"],["الثالث متوسط","4","صهيب عبدالله بن احمد السقاف","1162489338"],["الثالث متوسط","4","عبدالعزيز ابراهيم عبيدالله الجحدلى","1163030388"],["الثالث متوسط","4","عبدالعزيز مسلم بن جريد الصاعدي","1163998360"],["الثالث متوسط","4","عبدالكريم بندر عبدالكريم الاهدل","1160712202"],["الثالث متوسط","4","عبدالله فيصل بن عبدالعزيز قاضى","1159920543"],["الثالث متوسط","4","عبدالوهاب النشمي بن سالم الشراري","1160150817"],["الثالث متوسط","4","عزام جابر  المحرزي","0190800570"],["الثالث متوسط","4","علي رامى عالي البقمي","1163678103"],["الثالث متوسط","4","عمر عادل عبدالرحمن الكباوي","1161165038"],["الثالث متوسط","4","فارس خالد ابن ابوبكر عليوه","1162084048"],["الثالث متوسط","4","مروان محمد سالم بانخر","1161320948"],["الثالث متوسط","4","معتز مختار حبيب احمد المختار","2402789768"],["الثالث متوسط","4","نواف علي محمد الغامدي","1159335593"],["الثالث متوسط","4","وديع بندر خالد جوهرجي","1159877222"],["الثالث متوسط","4","وليد سامى بن علي فلمبان","1162910374"],["الثالث متوسط","4","ياسر غازى بن عيد الحربي","1163509019"],["الثالث متوسط","4","يوسف خالد امجد باحارث","1158632917"],["الثالث متوسط","5","أحمد بشير بن ابوبكر فلاته","1157374172"],["الثالث متوسط","5","أديب حاتم عبدالله مجلد","1158628345"],["الثالث متوسط","5","أديب محمد سفر الفهمي","1157723618"],["الثالث متوسط","5","أنس فؤاد مستور الزهراني","1158609170"],["الثالث متوسط","5","اياد جلال عبدالحميد عبدالوهاب","1161696768"],["الثالث متوسط","5","بتال منير بن محمدثاني الهوساوي","1155511593"],["الثالث متوسط","5","براء باسم عبدالسلام لبان","1158061836"],["الثالث متوسط","5","حمزه حسن مصطفي العطاس","1160815591"],["الثالث متوسط","5","خالد ماجد عبدالله بخارى","1158287118"],["الثالث متوسط","5","رائد سعيد بن حسن كابلى","1160328389"],["الثالث متوسط","5","زياد مشعل عبدالصمد الخضري","1159890423"],["الثالث متوسط","5","سليمان صالح محسن المنصوري","2360937250"],["الثالث متوسط","5","ضياء عبدالقادر بن محمد البرناوى","1161572308"],["الثالث متوسط","5","عبدالرحمن حمزه بن حسن حجي","1161991649"],["الثالث متوسط","5","عبدالعزيز ماجد بن عبدالعزيز حسين","1159515624"],["الثالث متوسط","5","عبداللطيف يحي بن احمد الزهراني","1158869055"],["الثالث متوسط","5","عبدالله خالد بن عبدالله شاعر","1163325549"],["الثالث متوسط","5","عدي عدنان قاسم ناجى","1166231959"],["الثالث متوسط","5","علي لؤى بن علي الزهراني","1161079049"],["الثالث متوسط","5","فارس سامر بن سالم العامودي","1163057852"],["الثالث متوسط","5","فيصل عبدالغني سعود المنجومي","1162907552"],["الثالث متوسط","5","قصي حاتم حسن صالح","1162288573"],["الثالث متوسط","5","محمد سعد بن عبدالله السبيعي","1163437229"],["الثالث متوسط","5","محمد عبدالرحمن بن سعيد الزهراني","1161307812"],["الثالث متوسط","5","نايف صالح جمعان الزهراني","1163479759"],["الثالث متوسط","5","نواف وحيد ابراهيم بحه","1160853444"],["الثالث متوسط","5","هلال حسين بن معضد الهذلي","1158809531"],["الثالث متوسط","5","وسيم اشرف نعمان محبوب","1162482432"],["الثالث متوسط","5","يزن أنس محمد ترونكوالا","2392072324"],["الثالث متوسط","5","يزن نورالحكيم بن نورالسلطان المهاجري","1159823515"],["الثالث متوسط","5","يوسف محمد عبدالرحمن نوفل","1159881901"],["الثالث متوسط","6","أحمد محمد غلام انديجاني","1161521115"],["الثالث متوسط","6","أنس لؤى هانى سمارن","1160919377"],["الثالث متوسط","6","أنمار خالد بن محجوب المغربي","1161023450"],["الثالث متوسط","6","أوس عبدالمعين بن احمد برقاوي","1157620905"],["الثالث متوسط","6","البراء احمد بن محمود عبده","1160705271"],["الثالث متوسط","6","البراء عبدالله بن علي واصلي","1162142903"],["الثالث متوسط","6","الوليد عمر محمدسعيد الحلبي","1161417462"],["الثالث متوسط","6","الياس شادى وهبو البيشى","1160318117"],["الثالث متوسط","6","جميل محمد بن مشعل العميري","1159798394"],["الثالث متوسط","6","جهاد عبدالله سليم المرزوقي الهذلي","1158672491"],["الثالث متوسط","6","رعد ياسر حسن ابوهبشه","1161656077"],["الثالث متوسط","6","رماح صفوان بن حسن قاسم","1160668552"],["الثالث متوسط","6","سعود ماجد بن سعيد الدعيس","1172699140"],["الثالث متوسط","6","عبدالعزيز عابد حسن الحجاجي","1159586278"],["الثالث متوسط","6","عبدالعزيز مصطفى - محمدأبوطاهر","2420531952"],["الثالث متوسط","6","عبدالله ابراهيم احمد طرابلسي","1163343666"],["الثالث متوسط","6","عبدالله ماجد جمال صلواتي","1159661543"],["الثالث متوسط","6","علي تركى عباس بخارى","1158963940"],["الثالث متوسط","6","عمر عبدالله بن عادل جمل الليل","1167051927"],["الثالث متوسط","6","عيسى ابراهيم عيسى الحربى","1162504995"],["الثالث متوسط","6","لؤي ماجد عبدالله عماشه","1161114242"],["الثالث متوسط","6","محمد امير ابراهيم بن صديق","1160262745"],["الثالث متوسط","6","معتز حسن بن حضيرم العوفى","1163442211"],["الثالث متوسط","6","معتز محمد بن موسى الاحمد","1160934954"],["الثالث متوسط","6","ممدوح انس ممدوح العطاس","1162591703"],["الثالث متوسط","6","وسام بن فؤاد بن عبدالله هزازي","1160104806"],["الثالث متوسط","6","وسام محمود منير أحمد شيرملك","2367517642"],["الثالث متوسط","6","يامن اسامه حسن حتحوت","1161289101"],["الثالث متوسط","6","يزن بلقاسم بن علي القوزي","1157247865"],["الثالث متوسط","6","يزن عامر بن علي الشهري","1161889835"],["الثالث متوسط","6","يزن مرزوق بن رده الخزاعي","1158722072"],["الثالث متوسط","6","يوسف صافى يوسف ازرق","1159874856"],["الثالث متوسط","6","يوسف عبدالله يحي عبادل","1162939670"],["الثالث متوسط","7","أسامة احمد بن يحي الزهراني","1162564874"],["الثالث متوسط","7","أوس وسام سالم الرفاعي","4300003353"],["الثالث متوسط","7","احمد سعيد بن راشد الشهرى","1162762536"],["الثالث متوسط","7","البراء عبيد عابد العضلي","1163719121"],["الثالث متوسط","7","اياد سمير عبدالله ابوالنور","1159487733"],["الثالث متوسط","7","اياد وليد سراج شيمى","1162330680"],["الثالث متوسط","7","باهر مصعب محمد الحربى","1158498988"],["الثالث متوسط","7","بسام عصام عبدالله الحضرمي","1163039678"],["الثالث متوسط","7","جواد هاني محمد المسعودي","1160166185"],["الثالث متوسط","7","حازم حامد عبدالحميد الصاعدى","1161676828"],["الثالث متوسط","7","رائد مازن بن عيدان الزهراني","1162575789"],["الثالث متوسط","7","رائد محمد عبدالصمد حافظ","1160981633"],["الثالث متوسط","7","زاهد عبدالمومن بن ابراهيم محمد","1161299993"],["الثالث متوسط","7","سعيد احمد سعيد الدعيس","1176687596"],["الثالث متوسط","7","سليمان مصعب سليمان جبريل","2449665997"],["الثالث متوسط","7","صهيب سلطان مرزوق اللهيبي","1164211318"],["الثالث متوسط","7","عبدالرحمن ضياء برهان خوجه","1160620702"],["الثالث متوسط","7","عبدالرحمن محمد عبدالرحمن فياضه","1158555795"],["الثالث متوسط","7","عبدالرحمن مروان بن صالح باودود","1162103434"],["الثالث متوسط","7","عبدالعزيز ضياء برهان خوجه","1160619779"],["الثالث متوسط","7","عبدالله بن سلطان بن خليفة الحارثي","1160567085"],["الثالث متوسط","7","عبدالمجيد هاشم عمر علوى","1165746049"],["الثالث متوسط","7","عبدالملك ايوب يوسف برناوى","1159803186"],["الثالث متوسط","7","عبدالوهاب علي بن عبدالوهاب الحكمي","1162790859"],["الثالث متوسط","7","عمار عوض شويل الشمراني","1160931869"],["الثالث متوسط","7","عمر بن محمد بن عبدالرحيم بن سعيد ناقرو","1154835290"],["الثالث متوسط","7","عويض محمد عويض الفهمى","1162228389"],["الثالث متوسط","7","كمال اياد كمال سمكري","1162787285"],["الثالث متوسط","7","معاذ عمر بن بركات بكاوي","1155383605"],["الثالث متوسط","7","ممدوح سمير عبدالملك مدهش","1159748183"],["الثالث متوسط","7","نبراس عبدالقادر ابن سعيد فلاته","1161515182"],["الثالث متوسط","7","وسيم سمير بن عبدالحميد صخيري","1160525760"],["الثالث متوسط","8","آسر ثامر عبدالله باجعيفر","2339379899"],["الثالث متوسط","8","أحمد عمار محمد فايز علعل","2393601451"],["الثالث متوسط","8","أنس حسن علي باناعمه","1159085206"],["الثالث متوسط","8","ابراهيم سامي ابراهيم عبدالجليل","1164003434"],["الثالث متوسط","8","احمد حمزة الحاج احمد","2339966737"],["الثالث متوسط","8","احمد ممدوح حسين بلخى","1167824604"],["الثالث متوسط","8","اشرف العربي محمود خيرالله","2365156492"],["الثالث متوسط","8","ايمن أحمد - هارون رشيد","2375448640"],["الثالث متوسط","8","باسل عبدالله عبده القرني","1160764591"],["الثالث متوسط","8","تميم عبدالله بن أحمد الفقيه","1157664812"],["الثالث متوسط","8","جمال مروان جمال ملاه","1157309624"],["الثالث متوسط","8","خالد وديع خالد حرقي","1160781843"],["الثالث متوسط","8","رائف هانى بن عدنان قارى","1162716490"],["الثالث متوسط","8","سراج حلمي يوهاردي باسيران","2335091084"],["الثالث متوسط","8","سعود سالم بن سعيد البيشى","1160993869"],["الثالث متوسط","8","صهيب علي بن راشد النمري","1159402187"],["الثالث متوسط","8","عبدالرحمن طلال حسن ملا","1161173081"],["الثالث متوسط","8","عبدالرحمن منصور بن غايب المقاطي","1163019043"],["الثالث متوسط","8","عبدالله احمد بن اسماعيل عسيري","1160426076"],["الثالث متوسط","8","عثمان ربيع ابن عثمان فرج","1161927783"],["الثالث متوسط","8","عمر مجدى محمد الدعدى","1163545732"],["الثالث متوسط","8","فهد ثامر عبدالرحمن نوفل","1159902350"],["الثالث متوسط","8","قصي فؤاد بن حسن عارف","1161792682"],["الثالث متوسط","8","قصي محمد بن سالم المصموم","1162500894"],["الثالث متوسط","8","محمد راضى بن عمر عبدالمغيث","1159383932"],["الثالث متوسط","8","محمد عبدالله محمد العامري","1161980014"],["الثالث متوسط","8","محمد فهد محمد ابورزيزه","1164033209"],["الثالث متوسط","8","محمد منير بن محمد الدعيس","1158717346"],["الثالث متوسط","8","محمد وديع عبدالرحمن الجيلاني","2354095685"],["الثالث متوسط","8","هاشم ماجد بن هاشم كيفى","1161285679"],["الثالث متوسط","8","وهيب وليد احمد الانصاري","1159951704"],["الثالث متوسط","8","يزن نايف محمد الصبحى","1160843734"]];
+
+/* ===================== كتالوج المخالفات السلوكية ===================== */
+const VIOLATIONS = [
+  {d:1, t:"التأخر الصباحي"},
+  {d:1, t:"عدم حضور الاصطفاف الصباحي"},
+  {d:1, t:"التأخر عن الاصطفاف الصباحي أو العبث أثناءه"},
+  {d:1, t:"التأخر في الدخول إلى الحصص"},
+  {d:1, t:"إعاقة سير الحصص (حديث / مقاطعة / تناول طعام)"},
+  {d:1, t:"النوم داخل الفصل"},
+  {d:1, t:"تكرار الخروج والدخول من البوابة قبل وقت الحضور والانصراف"},
+  {d:1, t:"التجمهر أمام بوابة المدرسة"},
+  {d:2, t:"عدم حضور الحصة أو الهروب منها"},
+  {d:2, t:"الدخول أو الخروج من الفصل دون استئذان"},
+  {d:2, t:"دخول فصل آخر دون استئذان"},
+  {d:2, t:"إثارة الفوضى داخل الفصل أو المدرسة"}
+];
+const DEGREE_LABEL = {1:"الأولى",2:"الثانية",3:"الثالثة",4:"الرابعة",5:"الخامسة"};
+const DEGREE_CLASS = {1:"d1",2:"d2",3:"d3",4:"d4",5:"d5"};
+
+/* ===================== أدوات مساعدة ===================== */
+const $ = id => document.getElementById(id);
+const ARABIC_DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+
+function todayInfo(){
+  const now = new Date();
+  const iso = now.toISOString().slice(0,10);
+  const day = ARABIC_DAYS[now.getDay()];
+  return {iso, day, now};
+}
+
+function toast(msg, isErr){
+  const t = $("toast");
+  $("toastMsg").textContent = msg;
+  t.querySelector(".ic").textContent = isErr ? "!" : "✓";
+  t.classList.toggle("err", !!isErr);
+  t.classList.add("show");
+  clearTimeout(toast._h);
+  toast._h = setTimeout(()=> t.classList.remove("show"), 3200);
+}
+
+function updateDots(){
+  $("dotGrade").classList.toggle("on", !!state.grade);
+  $("dotClass").classList.toggle("on", !!state.klass);
+  $("dotStudent").classList.toggle("on", !!state.student);
+  $("dotViolation").classList.toggle("on", !!state.violation);
+  $("dotClassType").classList.toggle("on", !!state.classType);
+}
+
+function updateSaveBtn(){
+  const ok = state.grade && state.klass && state.student && state.violation && state.classType;
+  $("btnSave").disabled = !ok;
+  $("saveHint").textContent = ok ? "جاهز للحفظ ✓" : "أكمل الاختيارات الخمسة أعلاه للحفظ";
+}
+
+/* ===================== الحالة ===================== */
+const state = { grade:"", klass:"", student:null, violation:null, classType:"" };
+
+function initClassTypeToggle(){
+  document.querySelectorAll('input[name="classType"]').forEach(input=>{
+    input.addEventListener("change", ()=>{
+      state.classType = input.value;
+      document.querySelectorAll('#classTypeGroup .esc-chip').forEach(l=>l.classList.remove("checked"));
+      input.closest(".esc-chip").classList.add("checked");
+      updateDots(); updateSaveBtn();
+    });
+  });
+}
+
+/* ===================== تعبئة القوائم ===================== */
+function initGrades(){
+  const grades = [...new Set(STUDENTS.map(s=>s[0]))];
+  // ترتيب منطقي
+  const order = ["الأول متوسط","الثاني متوسط","الثالث متوسط"];
+  grades.sort((a,b)=> order.indexOf(a)-order.indexOf(b));
+  const sel = $("selGrade");
+  grades.forEach(g=>{
+    const opt = document.createElement("option");
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+function initViolations(){
+  const sel = $("selViolation");
+  [1,2,3,4,5].forEach(d=>{
+    const grp = document.createElement("optgroup");
+    grp.label = "الدرجة " + DEGREE_LABEL[d];
+    VIOLATIONS.filter(v=>v.d===d).forEach(v=>{
+      const opt = document.createElement("option");
+      opt.value = v.t; opt.dataset.degree = d;
+      opt.textContent = v.t;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+function onGradeChange(){
+  const g = $("selGrade").value;
+  state.grade = g; state.klass=""; state.student=null;
+  const selC = $("selClass"), selS = $("selStudent");
+  selC.innerHTML = ""; selS.innerHTML = "<option value=''>اختر الفصل أولاً</option>";
+  selS.disabled = true;
+  $("studentCard").classList.remove("show");
+  if(!g){
+    selC.innerHTML = "<option value=''>اختر الصف الدراسي أولاً</option>";
+    selC.disabled = true;
+    updateDots(); updateSaveBtn();
+    return;
+  }
+  const classes = [...new Set(STUDENTS.filter(s=>s[0]===g).map(s=>s[1]))]
+    .sort((a,b)=> Number(a)-Number(b));
+  selC.innerHTML = "<option value=''>اختر الفصل...</option>";
+  classes.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = "فصل " + c;
+    selC.appendChild(opt);
+  });
+  selC.disabled = false;
+  updateDots(); updateSaveBtn();
+}
+
+function onClassChange(){
+  const c = $("selClass").value;
+  state.klass = c; state.student = null;
+  const selS = $("selStudent");
+  $("studentCard").classList.remove("show");
+  if(!c){
+    selS.innerHTML = "<option value=''>اختر الفصل أولاً</option>";
+    selS.disabled = true;
+    updateDots(); updateSaveBtn();
+    return;
+  }
+  const list = STUDENTS.filter(s=>s[0]===state.grade && s[1]===c)
+    .sort((a,b)=> a[2].localeCompare(b[2],'ar'));
+  selS.innerHTML = "<option value=''>اختر الطالب... (" + list.length + " طالبًا)</option>";
+  list.forEach((s,i)=>{
+    const opt = document.createElement("option");
+    opt.value = i; opt.textContent = s[2];
+    selS.appendChild(opt);
+  });
+  selS.disabled = false;
+  selS._list = list;
+  updateDots(); updateSaveBtn();
+}
+
+function onStudentChange(){
+  const idx = $("selStudent").value;
+  const list = $("selStudent")._list || [];
+  if(idx === ""){
+    state.student = null;
+    $("studentCard").classList.remove("show");
+    updateDots(); updateSaveBtn();
+    return;
+  }
+  const s = list[Number(idx)];
+  state.student = { grade:s[0], klass:s[1], name:s[2], sid:s[3] };
+  $("stuName").textContent = s[2];
+  $("stuMeta").textContent = s[0] + " - فصل " + s[1] + " · رقم الطالب " + s[3];
+  $("stuAvatar").textContent = s[2].trim().charAt(0);
+  $("studentCard").classList.add("show");
+  updateDots(); updateSaveBtn();
+}
+
+function onViolationChange(){
+  const sel = $("selViolation");
+  const opt = sel.selectedOptions[0];
+  if(!sel.value){
+    state.violation = null;
+    $("degreeHint").textContent = "";
+    updateDots(); updateSaveBtn();
+    return;
+  }
+  const d = Number(opt.dataset.degree);
+  state.violation = { text: sel.value, degree: d };
+  $("degreeHint").innerHTML = "الدرجة المختارة: <span class='degree-pill "+DEGREE_CLASS[d]+"'>الدرجة "+DEGREE_LABEL[d]+"</span>";
+  updateDots(); updateSaveBtn();
+}
+
+/* ===================== هوية المعلم (تسجيل الدخول) ===================== */
+const TEACHER_KEY = "qve_teacher_name";
+
+function getTeacherName(){
+  return (localStorage.getItem(TEACHER_KEY) || "").trim();
+}
+function setTeacherName(name){
+  localStorage.setItem(TEACHER_KEY, name.trim());
+}
+function clearTeacherName(){
+  localStorage.removeItem(TEACHER_KEY);
+}
+function refreshIdBadge(){
+  const name = getTeacherName();
+  if(name){
+    $("idRow").style.display = "flex";
+    $("idName").textContent = name;
+  }else{
+    $("idRow").style.display = "none";
+  }
+}
+
+/* ===================== الحفظ ===================== */
+let recentEntries = [];
+
+async function saveViolation(){
+  if(!state.grade || !state.klass || !state.student || !state.violation || !state.classType) return;
+  const btn = $("btnSave");
+  btn.disabled = true;
+  btn.textContent = "جارٍ الحفظ...";
+
+  const { iso, day } = todayInfo();
+  const classLabel = state.student.grade + " - " + state.student.klass;
+  const teacher = getTeacherName();
+
+  const payload = {
+    student_name: state.student.name,
+    class: classLabel,
+    student_id: state.student.sid,
+    vdate: iso,
+    vday: day,
+    violations: state.violation.text,
+    degrees: String(state.violation.degree),
+    notes: $("inpNotes").value.trim(),
+    action: $("selAction").value || null,
+    teacher: teacher || null,
+    entered_by: teacher || null,
+    period: $("selPeriod").value || null,
+    period_teacher: null,
+    class_type: state.classType
+  };
+
+  try{
+    const res = await fetch(SUPABASE_URL + "/rest/v1/violations", {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error(txt || res.statusText);
+    }
+    toast("تم حفظ المخالفة بنجاح ✓");
+    recentEntries.unshift({
+      who: state.student.name,
+      what: state.violation.text + " — الدرجة " + DEGREE_LABEL[state.violation.degree],
+      cls: classLabel
+    });
+    recentEntries = recentEntries.slice(0,5);
+    renderRecent();
+    resetAfterSave();
+  }catch(err){
+    console.error(err);
+    toast("تعذّر الحفظ، تحقق من الاتصال بالإنترنت وحاول مجددًا", true);
+  }finally{
+    btn.textContent = "حفظ المخالفة";
+    updateSaveBtn();
+  }
+}
+
+function escapeHtml(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+
+/* بعد الحفظ: يبقي الصف والفصل كما هما (لتسريع تسجيل عدة طلاب من نفس الفصل)
+   ويعيد تعيين الطالب والمخالفة والملاحظات فقط */
+function resetAfterSave(){
+  $("selStudent").value = "";
+  state.student = null;
+  $("studentCard").classList.remove("show");
+  $("selViolation").value = "";
+  state.violation = null;
+  $("degreeHint").textContent = "";
+  $("inpNotes").value = "";
+  $("selAction").value = "";
+  $("selPeriod").value = "";
+  state.classType = "";
+  document.querySelectorAll('input[name="classType"]').forEach(i=> i.checked = false);
+  document.querySelectorAll('#classTypeGroup .esc-chip').forEach(l=> l.classList.remove("checked"));
+  updateDots();
+  updateSaveBtn();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ===================== تسجيل الدخول (اسم + كلمة مرور خاصة بكل معلم) ===================== */
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function isTwoPartName(name){
+  const parts = name.split(/\s+/).filter(Boolean);
+  return parts.length >= 2;
+}
+
+async function tryLogin(){
+  const name = $("gateName").value.trim();
+  const pass = $("gatePass").value;
+  const err = $("gateErr");
+  err.textContent = "";
+
+  if(!name){ err.textContent = "الرجاء كتابة اسمك"; return; }
+  if(!isTwoPartName(name)){ err.textContent = "الرجاء كتابة الاسم الثنائي كاملاً (الاسم الأول واسم العائلة على الأقل)"; return; }
+  if(!pass){ err.textContent = "الرجاء إدخال كلمة المرور"; return; }
+  if(pass.length < 4){ err.textContent = "كلمة المرور يجب أن تكون 4 أحرف/أرقام على الأقل"; return; }
+
+  const btn = $("gateBtn");
+  btn.disabled = true; btn.textContent = "جارٍ التحقق...";
+
+  try{
+    const hash = await sha256Hex(pass);
+    const checkUrl = SUPABASE_URL + "/rest/v1/qve2_teachers?name=eq." + encodeURIComponent(name) + "&select=password_hash";
+    const res = await fetch(checkUrl, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    if(rows.length === 0){
+      // أول مرة لهذا المعلم — إنشاء الحساب بكلمة المرور المدخلة
+      const createRes = await fetch(SUPABASE_URL + "/rest/v1/qve2_teachers", {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY,
+          "Content-Type": "application/json", "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ name: name, password_hash: hash })
+      });
+      if(!createRes.ok) throw new Error(await createRes.text());
+      setTeacherName(name);
+      unlockApp();
+    }else if(rows[0].password_hash === hash){
+      setTeacherName(name);
+      unlockApp();
+    }else{
+      err.textContent = "كلمة المرور غير صحيحة";
+      $("gatePass").value = "";
+      $("gatePass").focus();
+    }
+  }catch(e){
+    console.error(e);
+    err.textContent = "تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مجددًا";
+  }finally{
+    btn.disabled = false; btn.textContent = "دخول";
+  }
+}
+
+function unlockApp(){
+  document.body.classList.remove("locked");
+  $("gate").style.display = "none";
+  refreshIdBadge();
+}
+
+function switchUser(){
+  clearTeacherName();
+  document.body.classList.add("locked");
+  $("gate").style.display = "flex";
+  $("gatePass").value = "";
+  $("gateErr").textContent = "";
+  setTimeout(()=> $("gatePass") && $("gatePass").focus(), 200);
+}
+
+function initGate(){
+  const lastName = getTeacherName();
+  if(lastName) $("gateName").value = lastName;
+  setTimeout(()=> $("gatePass") && $("gatePass").focus(), 300);
+
+  $("gateBtn").addEventListener("click", tryLogin);
+  $("gatePass").addEventListener("keydown", e=>{ if(e.key === "Enter") tryLogin(); });
+  $("gateName").addEventListener("keydown", e=>{ if(e.key === "Enter") $("gatePass").focus(); });
+  $("btnSwitchUser").addEventListener("click", switchUser);
+}
+
+/* ===================== سجل مخالفاتي ===================== */
+function switchTab(which){
+  $("tabEntry").classList.toggle("active", which === "entry");
+  $("tabMine").classList.toggle("active", which === "mine");
+  $("viewEntry").style.display = which === "entry" ? "" : "none";
+  $("viewMine").style.display = which === "mine" ? "" : "none";
+  if(which === "mine") loadMyViolations();
+}
+
+function degreePill(d){
+  d = Number(d) || 0;
+  const label = DEGREE_LABEL[d] || "—";
+  const cls = DEGREE_CLASS[d] || "";
+  return "<span class='degree-pill "+cls+"'>الدرجة "+label+"</span>";
+}
+
+async function loadMyViolations(){
+  const name = getTeacherName();
+  const listEl = $("mineList"), emptyEl = $("mineEmpty"), loadEl = $("mineLoading");
+  listEl.innerHTML = ""; emptyEl.style.display = "none"; loadEl.style.display = "block";
+  try{
+    const url = SUPABASE_URL + "/rest/v1/violations?teacher=eq." + encodeURIComponent(name)
+      + "&select=student_name,class,vdate,vday,violations,degrees,period,action,notes&order=id.desc&limit=300";
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    loadEl.style.display = "none";
+    if(!rows.length){ emptyEl.style.display = "block"; return; }
+    listEl.innerHTML = rows.map(r => `
+      <div class="mine-item">
+        <div class="top-row">
+          <div>
+            <div class="st-name">${escapeHtml(r.student_name || "—")}</div>
+            <div class="st-class">${escapeHtml(r.class || "—")}</div>
+          </div>
+          ${degreePill(r.degrees)}
+        </div>
+        <div class="vtext">${escapeHtml(r.violations || "—")}</div>
+        <div class="vmeta">
+          <span>📅 ${escapeHtml(r.vday || "")} ${escapeHtml(r.vdate || "")}</span>
+          ${r.period ? "<span>🕐 " + escapeHtml(r.period) + "</span>" : ""}
+          ${r.action ? "<span>⚙️ " + escapeHtml(r.action) + "</span>" : ""}
+        </div>
+      </div>
+    `).join("");
+  }catch(e){
+    loadEl.style.display = "none";
+    toast("تعذّر تحميل السجل، تحقق من الاتصال", true);
+  }
+}
+
+/* ===================== بدء التشغيل ===================== */
+function boot(){
+  initGate();
+  refreshIdBadge();
+  const {iso, day} = todayInfo();
+  const dNow = new Date();
+  const dd = String(dNow.getDate()).padStart(2,"0");
+  const mm = String(dNow.getMonth()+1).padStart(2,"0");
+  $("dateBadge").innerHTML = day + "<br>" + dd + "/" + mm + "/" + dNow.getFullYear();
+
+  initGrades();
+  initViolations();
+  initClassTypeToggle();
+
+  $("selGrade").addEventListener("change", onGradeChange);
+  $("selClass").addEventListener("change", onClassChange);
+  $("selStudent").addEventListener("change", onStudentChange);
+  $("selViolation").addEventListener("change", onViolationChange);
+  $("btnSave").addEventListener("click", saveViolation);
+  $("tabEntry").addEventListener("click", ()=>switchTab("entry"));
+  $("tabMine").addEventListener("click", ()=>switchTab("mine"));
+  $("btnRefreshMine").addEventListener("click", loadMyViolations);
+
+  updateDots();
+  updateSaveBtn();
+
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+}
+document.addEventListener("DOMContentLoaded", boot);
+</script>
+</body>
+</html>
