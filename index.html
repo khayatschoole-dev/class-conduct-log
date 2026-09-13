@@ -1027,6 +1027,12 @@ async function saveViolation(){
     class_type: state.classType
   };
 
+  // يُرسَل تنبيه الهروب فورًا ومستقلًا تمامًا عن نجاح حفظ سجل المخالفة أو فشله —
+  // حتى لو ضاع تأكيد الحفظ بسبب ضعف الاتصال، يصل التنبيه لأنه لا ينتظر رد حفظ المخالفة إطلاقًا
+  if(isEscape){
+    sendEscapeAlert(state.student, classLabel, payload.period, teacher, state.escapeRecipients.slice());
+  }
+
   try{
     const res = await fetch(SUPABASE_URL + "/rest/v1/violations", {
       method: "POST",
@@ -1043,9 +1049,6 @@ async function saveViolation(){
       throw new Error(txt || res.statusText);
     }
     toast("تم حفظ المخالفة بنجاح ✓");
-    if(isEscape){
-      sendEscapeAlert(state.student, classLabel, payload.period, teacher, state.escapeRecipients.slice());
-    }
     recentEntries.unshift({
       who: state.student.name,
       what: state.violation.text + " — الدرجة " + DEGREE_LABEL[state.violation.degree],
