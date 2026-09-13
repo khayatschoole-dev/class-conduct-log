@@ -575,6 +575,7 @@
               <option>إحالة للموجه الطلابي</option>
             </select>
           </div>
+          <div class="hint" id="actionRepeatWarning" style="display:none; color:var(--red); font-weight:700; margin-top:6px;"></div>
         </div>
       </div>
       <div class="field" style="margin-bottom:0;">
@@ -866,6 +867,7 @@ function onStudentChange(){
     state.student = null;
     $("studentCard").classList.remove("show");
     updateDots(); updateSaveBtn();
+    hideActionRepeatWarning();
     return;
   }
   const s = list[Number(idx)];
@@ -875,6 +877,7 @@ function onStudentChange(){
   $("stuAvatar").textContent = s[2].trim().charAt(0);
   $("studentCard").classList.add("show");
   updateDots(); updateSaveBtn();
+  checkRepeatedAction();
 }
 
 function onViolationChange(){
@@ -884,6 +887,7 @@ function onViolationChange(){
     state.violation = null;
     $("degreeHint").textContent = "";
     updateDots(); updateSaveBtn();
+    hideActionRepeatWarning();
     return;
   }
   const d = Number(opt.dataset.degree);
@@ -893,6 +897,49 @@ function onViolationChange(){
   $("escapeAlertBox").style.display = isEscape ? "block" : "none";
   if(!isEscape) resetEscapeRecipients();
   updateDots(); updateSaveBtn();
+  checkRepeatedAction();
+}
+
+/* ===================== تنبيه تكرار نفس الإجراء لنفس المخالفة لنفس الطالب ===================== */
+function hideActionRepeatWarning(){
+  const box = $("actionRepeatWarning");
+  box.style.display = "none";
+  box.textContent = "";
+}
+
+let _actionCheckToken = 0;
+async function checkRepeatedAction(){
+  const action = $("selAction").value;
+  const violation = state.violation;
+  const student = state.student;
+  if(!action || !violation || !student){ hideActionRepeatWarning(); return; }
+
+  const myToken = ++_actionCheckToken;
+  const classLabel = student.grade + " - " + student.klass;
+  try{
+    const url = SUPABASE_URL + "/rest/v1/violations"
+      + "?student_name=eq." + encodeURIComponent(student.name)
+      + "&class=eq." + encodeURIComponent(classLabel)
+      + "&violations=eq." + encodeURIComponent(violation.text)
+      + "&action=eq." + encodeURIComponent(action)
+      + "&select=vdate,vday,teacher&order=vdate.desc&limit=1";
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(myToken !== _actionCheckToken) return; // نتيجة قديمة لطلب سابق، تجاهلها
+    if(!res.ok){ hideActionRepeatWarning(); return; }
+    const rows = await res.json();
+    if(rows.length){
+      const r = rows[0];
+      const box = $("actionRepeatWarning");
+      box.style.display = "block";
+      box.textContent = "⚠️ تم اتخاذ هذا الإجراء بالفعل مع هذا الطالب لنفس المخالفة سابقًا (" + (r.vday||"") + " " + (r.vdate||"") + (r.teacher ? " — بواسطة: " + r.teacher : "") + ")";
+    }else{
+      hideActionRepeatWarning();
+    }
+  }catch(e){
+    console.warn("checkRepeatedAction failed", e);
+  }
 }
 
 /* ===================== هوية المعلم (تسجيل الدخول) ===================== */
@@ -1003,6 +1050,7 @@ function resetAfterSave(){
   $("degreeHint").textContent = "";
   $("inpNotes").value = "";
   $("selAction").value = "";
+  hideActionRepeatWarning();
   $("selPeriod").value = "";
   $("escapeAlertBox").style.display = "none";
   resetEscapeRecipients();
@@ -1175,6 +1223,7 @@ function boot(){
   $("selClass").addEventListener("change", onClassChange);
   $("selStudent").addEventListener("change", onStudentChange);
   $("selViolation").addEventListener("change", onViolationChange);
+  $("selAction").addEventListener("change", checkRepeatedAction);
   $("btnSave").addEventListener("click", saveViolation);
   $("tabEntry").addEventListener("click", ()=>switchTab("entry"));
   $("tabMine").addEventListener("click", ()=>switchTab("mine"));
