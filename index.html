@@ -472,6 +472,9 @@
   <section id="viewEntry">
 
   <div class="card">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+      <button type="button" id="btnClearForm" class="ghostlink" style="font-size:13px;">🆕 مسح والبدء من جديد</button>
+    </div>
     <div class="steps">
       <div class="dot" id="dotGrade"></div>
       <div class="dot" id="dotClass"></div>
@@ -811,6 +814,27 @@ function initViolations(){
     });
     sel.appendChild(grp);
   });
+}
+
+function clearFormCompletely(){
+  $("selGrade").value = "";
+  onGradeChange(); // يصفّر الفصل والطالب تبعًا لذلك
+  $("selViolation").value = "";
+  state.violation = null;
+  $("degreeHint").textContent = "";
+  $("escapeAlertBox").style.display = "none";
+  resetEscapeRecipients();
+  state.classType = "";
+  document.querySelectorAll('input[name="classType"]').forEach(i=> i.checked = false);
+  document.querySelectorAll('#classTypeGroup .esc-chip').forEach(l=> l.classList.remove("checked"));
+  $("inpNotes").value = "";
+  $("selAction").value = "";
+  $("selPeriod").value = "";
+  hideActionRepeatWarning();
+  updateDots();
+  updateSaveBtn();
+  window.scrollTo({top:0, behavior:"smooth"});
+  toast("تم مسح البيانات — جاهز لإدخال جديد");
 }
 
 function onGradeChange(){
@@ -1232,6 +1256,7 @@ function boot(){
   $("selViolation").addEventListener("change", onViolationChange);
   $("selAction").addEventListener("change", checkRepeatedAction);
   $("btnSave").addEventListener("click", saveViolation);
+  $("btnClearForm").addEventListener("click", clearFormCompletely);
   $("tabEntry").addEventListener("click", ()=>switchTab("entry"));
   $("tabMine").addEventListener("click", ()=>switchTab("mine"));
   $("btnRefreshMine").addEventListener("click", loadMyViolations);
