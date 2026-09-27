@@ -1056,10 +1056,51 @@ async function saveViolation(){
     resetAfterSave();
   }catch(err){
     console.error(err);
-    toast("تعذّر الحفظ، تحقق من الاتصال بالإنترنت وحاول مجددًا", true);
+    // قبل إظهار خطأ، نتحقق فعليًا من قاعدة البيانات: أحيانًا يصل الحفظ للخادم وينجح
+    // لكن تأكيده لا يصل للجهاز بسبب ضعف الاتصال، فنتجنب طمأنة كاذبة بالفشل
+    const reallyFailed = await verifyNotSaved(payload);
+    if(reallyFailed){
+      toast("تعذّر الحفظ، تحقق من الاتصال بالإنترنت وحاول مجددًا", true);
+    }else{
+      toast("تم حفظ المخالفة بنجاح ✓ (تأخر وصول التأكيد لكن الحفظ تم)");
+      recentEntries.unshift({
+        who: state.student.name,
+        what: state.violation.text + " — الدرجة " + DEGREE_LABEL[state.violation.degree],
+        cls: classLabel
+      });
+      recentEntries = recentEntries.slice(0,5);
+      renderRecent();
+      resetAfterSave();
+    }
   }finally{
     btn.textContent = "حفظ المخالفة";
     updateSaveBtn();
+  }
+}
+
+/* يتحقق مباشرة من قاعدة البيانات هل سُجِّلت مخالفة مطابقة فعليًا خلال آخر دقيقة —
+   يُستخدم فقط بعد فشل ظاهري في الحفظ، ليفرّق بين فشل حقيقي وبين ضياع تأكيد وصول ناجح */
+async function verifyNotSaved(payload){
+  try{
+    const url = SUPABASE_URL + "/rest/v1/violations"
+      + "?student_name=eq." + encodeURIComponent(payload.student_name)
+      + "&class=eq." + encodeURIComponent(payload.class)
+      + "&violations=eq." + encodeURIComponent(payload.violations)
+      + "&vdate=eq." + encodeURIComponent(payload.vdate)
+      + "&select=id,created_at&order=id.desc&limit=3";
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) return true; // تعذّر التحقق أيضًا، نفترض الأسوأ (فشل حقيقي) بحذر
+    const rows = await res.json();
+    const nowMs = Date.now();
+    const justSaved = rows.some(r=>{
+      const t = new Date(r.created_at).getTime();
+      return (nowMs - t) < 60000; // حُفظت خلال آخر 60 ثانية
+    });
+    return !justSaved; // true = فشل حقيقي (لا يوجد صف حديث مطابق)، false = نجح فعليًا
+  }catch(e){
+    return true; // تعذّر التحقق، نفترض فشلًا حقيقيًا بحذر بدل طمأنة قد تكون خاطئة
   }
 }
 
