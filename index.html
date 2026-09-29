@@ -1053,7 +1053,9 @@ async function saveViolation(){
     });
     recentEntries = recentEntries.slice(0,5);
     renderRecent();
-    resetAfterSave();
+    { const savedStudent = state.student, savedViolationText = state.violation.text;
+      resetAfterSave();
+      checkThirdWarning(savedStudent, savedViolationText); }
   }catch(err){
     console.error(err);
     // قبل إظهار خطأ، نتحقق فعليًا من قاعدة البيانات: أحيانًا يصل الحفظ للخادم وينجح
@@ -1070,7 +1072,9 @@ async function saveViolation(){
       });
       recentEntries = recentEntries.slice(0,5);
       renderRecent();
-      resetAfterSave();
+      { const savedStudent = state.student, savedViolationText = state.violation.text;
+        resetAfterSave();
+        checkThirdWarning(savedStudent, savedViolationText); }
     }
   }finally{
     btn.textContent = "حفظ المخالفة";
@@ -1102,6 +1106,235 @@ async function verifyNotSaved(payload){
   }catch(e){
     return true; // تعذّر التحقق، نفترض فشلًا حقيقيًا بحذر بدل طمأنة قد تكون خاطئة
   }
+}
+
+async function checkThirdWarning(student, violationText){
+  try{
+    // يُحوَّل الطالب فقط عند وصوله لـ 3 مخالفات (فأكثر) من نفس نوع المخالفة تحديدًا — وليس أي مخالفات مختلفة
+    const url = SUPABASE_URL + "/rest/v1/violations?student_id=eq." + encodeURIComponent(student.sid)
+      + "&violations=eq." + encodeURIComponent(violationText)
+      + "&or=(is_prior_year.eq.false,is_prior_year.is.null)"
+      + "&select=vdate,vday,violations,degrees,action,teacher,period&order=vdate.asc";
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+
+    // تجميع مخالفات هذا النوع تحديدًا حسب التاريخ (نادرًا ما تتكرر نفس المخالفة في نفس اليوم)
+    const byDate = new Map();
+    rows.forEach(r=>{
+      if(!byDate.has(r.vdate)){
+        byDate.set(r.vdate, { vdate:r.vdate, vday:r.vday, violations:[], degrees:[], actions:[], teachers:[], periods:[] });
+      }
+      const g = byDate.get(r.vdate);
+      if(r.violations) g.violations.push(r.violations);
+      if(r.degrees) g.degrees.push(r.degrees);
+      if(r.action) g.actions.push(r.action);
+      if(r.teacher) g.teachers.push(r.teacher);
+      if(r.period) g.periods.push(r.period);
+    });
+    const dateGroups = [...byDate.values()].sort((a,b)=> a.vdate.localeCompare(b.vdate));
+
+    if(rows.length < 3) return;
+
+    const alreadyReferred = await logReferralIfNew(student, dateGroups, violationText);
+    if(alreadyReferred){
+      // الطالب مُحوَّل مسبقًا لوكيل شؤون الطلاب — يُفتح نموذج التحويل مباشرة دون نافذة تنبيه وسيطة
+      openReferralReport(student, dateGroups, violationText);
+    }else{
+      // أول مرة يصل فيها الطالب لهذا الحد — تُعرض نافذة التنبيه أولًا ليختار المعلم
+      showThirdWarningAlert(student, dateGroups, violationText);
+    }
+  }catch(e){ /* لا نعطّل حفظ المخالفة إن فشل هذا الفحص */ console.warn(e); }
+}
+
+/* تسجيل الإحالة في قاعدة البيانات (تُقرأ من تبويب "الإحالات" في النظام الرئيسي)
+   لا نكرر نفس الإحالة إذا كان عدد التواريخ لم يتغيّر منذ آخر إحالة مسجَّلة لهذا الطالب
+   ترجع true إذا كان للطالب إحالة سابقة بالفعل (بغضّ النظر عن تسجيل صف جديد الآن أو لا) */
+async function logReferralIfNew(student, dateGroups, violationText){
+  let hadPriorReferral = false;
+  try{
+    const checkUrl = SUPABASE_URL + "/rest/v1/referrals?student_id=eq." + encodeURIComponent(student.sid)
+      + "&select=dates_count&order=id.desc&limit=1";
+    const checkRes = await fetch(checkUrl, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(checkRes.ok){
+      const last = await checkRes.json();
+      hadPriorReferral = last.length > 0;
+      if(last.length && Number(last[0].dates_count) === dateGroups.length){
+        return hadPriorReferral; // نفس الإحالة سبق تسجيلها بنفس العدد — لا حاجة لإضافة صف جديد
+      }
+    }
+    const payload = {
+      student_id: student.sid,
+      student_name: student.name,
+      class: student.grade + " - " + student.klass,
+      dates_count: dateGroups.length,
+      ref_number: refNumber(student),
+      violations_summary: violationText + " (×" + dateGroups.length + ")",
+      degrees_summary: dateGroups.map(g=>g.degrees.join(",")).join("|"),
+      status: "جديد"
+    };
+    await fetch(SUPABASE_URL + "/rest/v1/referrals", {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json", "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){ console.warn("تعذّر تسجيل الإحالة:", e); }
+  return hadPriorReferral;
+}
+
+function showThirdWarningAlert(student, dateGroups, violationText){
+  const count = dateGroups.length;
+  const title = count === 3 ? "⚠️ الإنذار الثالث" : "⚠️ تنبيه: تكرار نفس المخالفة (" + count + " مرات)";
+  const box = document.createElement("div");
+  box.className = "warn-overlay";
+  box.innerHTML = `
+    <div class="warn-box">
+      <div class="warn-ic">⚠️</div>
+      <h2>${title}</h2>
+      <p>الطالب <b>${escapeHtml(student.name)}</b> (${escapeHtml(student.grade)} - فصل ${escapeHtml(student.klass)})
+      كرّر نفس المخالفة "<b>${escapeHtml(violationText)}</b>" في <b>${count}</b> تواريخ مختلفة.<br>يلزم تحويله إلى وكيل شؤون الطلاب.</p>
+      <button class="btn" id="btnOpenReferral">فتح نموذج التحويل</button>
+      <button class="btn ghost" id="btnDismissWarn">لاحقًا</button>
+    </div>
+  `;
+  document.body.appendChild(box);
+  box.querySelector("#btnDismissWarn").addEventListener("click", ()=> box.remove());
+  box.querySelector("#btnOpenReferral").addEventListener("click", ()=>{
+    box.remove();
+    openReferralReport(student, dateGroups, violationText);
+  });
+}
+
+function refNumber(student){
+  const d = new Date();
+  const ymd = String(d.getFullYear()).slice(2) + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+  const tail = String(student.sid||"").slice(-3);
+  return "REF-" + ymd + "-" + tail;
+}
+function degPillStyle(d){
+  const map = {1:["var(--d1bg)","var(--d1)"],2:["var(--d2bg)","var(--d2)"],3:["var(--d3bg)","var(--d3)"],4:["var(--d4bg)","var(--d4)"],5:["var(--d5bg)","var(--d5)"]};
+  const c = map[d] || ["#eee","#555"];
+  return `background:${c[0]};color:${c[1]};`;
+}
+
+function openReferralReport(student, dateGroups, violationText){
+  const { day, iso } = todayInfo();
+  const dd = iso.split("-").reverse().join("/");
+  const rowsHtml = dateGroups.map((g,i)=> {
+    const vdd = (g.vdate||"").split("-").reverse().join("/");
+    const degBadges = g.degrees.map(d=>{
+      const n = Number(d);
+      return `<span class="r-degpill" style="${degPillStyle(n)}">${DEGREE_LABEL[n]||d}</span>`;
+    }).join(" ");
+    return `
+    <tr>
+      <td>${i+1}</td>
+      <td class="r-vdate">${escapeHtml(g.vday||"")}<br>${escapeHtml(vdd)}</td>
+      <td class="r-vtext">${escapeHtml(g.violations.join("، "))}</td>
+      <td>${degBadges}</td>
+      <td>${escapeHtml(g.actions.join("، ") || "—")}</td>
+      <td>${escapeHtml([...new Set(g.teachers)].join("، ") || "—")}</td>
+    </tr>`;
+  }).join("");
+
+  const count = dateGroups.length;
+  const statusLabel = count === 3 ? "⚠️ الإنذار الثالث" : "⚠️ تكرار نفس المخالفة (" + count + ")";
+
+  const overlay = document.createElement("div");
+  overlay.className = "report-overlay";
+  overlay.id = "reportOverlay";
+  overlay.innerHTML = `
+    <div class="report-toolbar no-print">
+      <button class="btn" id="btnPrintReport">🖨️ طباعة / حفظ PDF</button>
+      <button class="btn ghost" id="btnCloseReport">إغلاق</button>
+    </div>
+    <div class="report-sheet">
+      <div class="r-inner">
+
+        <div class="r-letterhead">
+          <div class="r-top">
+            <div class="r-seal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="2.5" width="14" height="17" rx="2" stroke="#fff" stroke-width="1.6"/>
+                <line x1="7" y1="7" x2="15" y2="7" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+                <line x1="7" y1="10.3" x2="15" y2="10.3" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+                <line x1="7" y1="13.6" x2="11.5" y2="13.6" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="17.5" cy="17.5" r="5.4" fill="#a13a34" stroke="#fff" stroke-width="1.3"/>
+                <line x1="17.5" y1="14.7" x2="17.5" y2="18" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="17.5" cy="20.2" r="0.9" fill="#fff"/>
+              </svg>
+            </div>
+            <div class="r-titles">
+              <div class="r-doctitle">نموذج إحالة طالب</div>
+              <div class="r-docsub">إلى وكيل شؤون الطلاب — الشيخ عبدالله خياط المتوسطة</div>
+            </div>
+            <div class="r-refbox">
+              <div class="rb-label">رقم الإحالة</div>
+              <div class="rb-value">${refNumber(student)}</div>
+            </div>
+          </div>
+          <div class="r-lhbottom">
+            <span class="r-statuschip">${statusLabel}</span>
+            <span class="r-lhdate">تاريخ الإصدار: ${escapeHtml(day)} ${escapeHtml(dd)}</span>
+          </div>
+        </div>
+
+        <div class="r-content">
+          <div class="r-sectlabel">بيانات الطالب</div>
+          <div class="r-infocard">
+            <div class="r-cell"><div class="ric-label">اسم الطالب</div><div class="ric-value">${escapeHtml(student.name)}</div></div>
+            <div class="r-cell"><div class="ric-label">الصف</div><div class="ric-value">${escapeHtml(student.grade)}</div></div>
+            <div class="r-cell"><div class="ric-label">الفصل</div><div class="ric-value">فصل ${escapeHtml(student.klass)}</div></div>
+            <div class="r-cell"><div class="ric-label">المخالفة المتكررة</div><div class="ric-value">${escapeHtml(violationText || "—")}</div></div>
+            <div class="r-cell"><div class="ric-label">عدد مرات التكرار</div><div class="ric-value">${count} تواريخ</div></div>
+          </div>
+
+          <div class="r-sectlabel">تفصيل المخالفات</div>
+          <div class="r-leadnote">كرّر الطالب <b>${escapeHtml(student.name)}</b> مخالفة "<b>${escapeHtml(violationText || "")}</b>" في ${count} تواريخ مختلفة، وفيما يلي تفصيلها:</div>
+          <table class="r-vtable">
+            <thead><tr><th>م</th><th>التاريخ</th><th>المخالفة</th><th>الدرجة</th><th>الإجراء السابق</th><th>المعلم الراصد</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+
+          <div class="r-ack">
+            <span class="r-acktag">إقرار الطالب</span>
+            <p>تم العلم بالإنذار الثالث، وأتحمل في حال تكرار المخالفة الإجراءات السلوكية المتخذة.</p>
+          </div>
+
+          <div class="r-signgrid">
+            <div class="r-signcard">
+              <div class="rsc-title">👤 إقرار الطالب</div>
+              <div class="r-signrow"><span class="rsr-label">الاسم</span><span class="rsr-line"></span></div>
+              <div class="r-signrow"><span class="rsr-label">التوقيع</span><span class="rsr-line"></span></div>
+              <div class="r-signrow"><span class="rsr-label">التاريخ</span><span class="rsr-line"></span></div>
+            </div>
+            <div class="r-signcard">
+              <div class="rsc-title">🏫 اعتماد الإدارة</div>
+              <div class="r-signrow"><span class="rsr-label">وكيل شؤون الطلاب</span><span class="rsr-line"></span></div>
+              <div class="r-signrow"><span class="rsr-label">التوقيع</span><span class="rsr-line"></span></div>
+              <div class="r-signrow"><span class="rsr-label">التاريخ</span><span class="rsr-line"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="r-footer">
+          <div class="rf-logo">🔔 نظام رصد المخالفات السلوكية</div>
+          <div class="rf-text">وثيقة صادرة آليًا — الشيخ عبدالله خياط المتوسطة، مكة المكرمة</div>
+        </div>
+
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#btnCloseReport").addEventListener("click", ()=> overlay.remove());
+  overlay.querySelector("#btnPrintReport").addEventListener("click", ()=> window.print());
 }
 
 function escapeHtml(s){
